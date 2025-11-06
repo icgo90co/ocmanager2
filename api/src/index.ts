@@ -51,15 +51,12 @@ app.use(cookieParser());
 // Static files (uploads)
 app.use('/uploads', express.static('uploads'));
 
-// Routes
-app.use('/api', router);
-
-// Health check
+// Health check (before routes)
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// Debug endpoint for CORS configuration
+// Debug endpoint for CORS configuration (before routes)
 app.get('/api/debug/cors', (req, res) => {
   res.json({
     corsOrigin: process.env.CORS_ORIGIN,
@@ -68,6 +65,9 @@ app.get('/api/debug/cors', (req, res) => {
     allowedOrigin: allowedOrigin,
   });
 });
+
+// Routes
+app.use('/api', router);
 
 // Error handling
 app.use(notFoundHandler);
