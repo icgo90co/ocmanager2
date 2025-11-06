@@ -8,9 +8,11 @@ import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { Plus, Upload, Eye } from 'lucide-react';
+import { OrdenCompraForm } from '@/components/OrdenCompraForm';
 
 export default function OrdenesCompraPage() {
   const [search, setSearch] = useState('');
+  const [showCreateForm, setShowCreateForm] = useState(false);
 
   const { data: ordenes, isLoading } = useQuery({
     queryKey: ['ordenes-compra', search],
@@ -34,12 +36,14 @@ export default function OrdenesCompraPage() {
             <Upload className="h-4 w-4 mr-2" />
             Subir Archivo
           </Button>
-          <Button>
+          <Button onClick={() => setShowCreateForm(true)}>
             <Plus className="h-4 w-4 mr-2" />
             Nueva Orden
           </Button>
         </div>
       </div>
+
+      <OrdenCompraForm open={showCreateForm} onOpenChange={setShowCreateForm} />
 
       <Card>
         <CardHeader>
