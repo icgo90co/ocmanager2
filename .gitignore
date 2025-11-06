@@ -36,9 +36,6 @@ uploads/
 # Testing
 coverage/
 
-# Prisma
-api/prisma/migrations/
-
 # Docker
 *.pid
 *.seed
