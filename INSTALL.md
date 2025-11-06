@@ -182,6 +182,55 @@ Igual que en instalación local:
 - Frontend: http://localhost:5173
 - API: http://localhost:3001
 
+### Troubleshooting Docker Build
+
+#### Error: "npm ci can only install with an existing package-lock.json"
+
+**Causa**: Los Dockerfiles intentan usar `npm ci` pero no hay `package-lock.json` en el repositorio.
+
+**Solución**: Los Dockerfiles ahora detectan automáticamente si existe `package-lock.json`:
+- Si existe: usa `npm ci` (más rápido y reproducible)
+- Si no existe: usa `npm install` (genera lock file on-the-fly)
+
+Para builds más reproducibles, genera y commitea los lock files:
+```bash
+# Backend
+cd api
+npm install
+git add package-lock.json
+
+# Frontend
+cd ../web
+npm install
+git add package-lock.json
+
+# Commit
+cd ..
+git commit -m "Add package-lock files for reproducible builds"
+```
+
+#### Error: "tsc: not found" durante build
+
+**Causa**: TypeScript está en `devDependencies` pero se estaba instalando solo deps de producción.
+
+**Solución**: Los Dockerfiles ahora usan **multi-stage builds**:
+- Stage 1: Instala todas las deps (incluidas dev) y compila TypeScript
+- Stage 2: Solo copia el código compilado y deps de producción
+- Resultado: Build exitoso e imagen final más pequeña
+
+#### Reconstruir después de cambios en Dockerfile
+
+```bash
+# Rebuild sin cache
+docker compose build --no-cache
+
+# O rebuild solo un servicio
+docker compose build --no-cache api
+
+# Rebuild y restart
+docker compose up -d --build
+```
+
 ---
 
 ## Build para Producción

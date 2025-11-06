@@ -37,7 +37,7 @@ export const login = async (req: AuthRequest, res: Response, next: NextFunction)
         clienteId: user.clienteId,
       },
       process.env.JWT_SECRET!,
-      { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
+      { expiresIn: '7d' }
     );
 
     res.cookie('token', token, {
@@ -87,7 +87,6 @@ export const me = async (req: AuthRequest, res: Response, next: NextFunction) =>
 
     const user = await prisma.user.findUnique({
       where: { id: decoded.id },
-      include: { cliente: true },
       select: {
         id: true,
         nombre: true,
@@ -95,7 +94,14 @@ export const me = async (req: AuthRequest, res: Response, next: NextFunction) =>
         role: true,
         clienteId: true,
         activo: true,
-        cliente: true,
+        cliente: {
+          select: {
+            id: true,
+            nombre: true,
+            email: true,
+            telefono: true,
+          },
+        },
       },
     });
 

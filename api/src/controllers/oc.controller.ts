@@ -168,7 +168,7 @@ export const uploadFile = async (req: AuthRequest, res: Response, next: NextFunc
     const data = XLSX.utils.sheet_to_json(sheet);
 
     // Detectar columnas
-    const headers = data.length > 0 ? Object.keys(data[0]) : [];
+    const headers = data.length > 0 ? Object.keys(data[0] as Record<string, unknown>) : [];
 
     res.json({
       success: true,
