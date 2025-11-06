@@ -1,0 +1,73 @@
+version: '3.8'
+
+services:
+  db:
+    image: mariadb:11.2
+    container_name: ocmanager_db
+    restart: unless-stopped
+    environment:
+      MARIADB_ROOT_PASSWORD: rootpassword
+      MARIADB_DATABASE: gold
+      MARIADB_USER: camilo
+      MARIADB_PASSWORD: 'Indiana@@90081010'
+    ports:
+      - "9858:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+    networks:
+      - ocmanager_network
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    container_name: ocmanager_api
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=mysql://camilo:Indiana%40%4090081010@db:3306/gold
+      - JWT_SECRET=${JWT_SECRET:-default-secret-change-me}
+      - CORS_ORIGIN=http://localhost:5173
+    volumes:
+      - ./api:/app
+      - /app/node_modules
+      - uploads:/app/uploads
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - ocmanager_network
+    command: sh -c "npx prisma migrate deploy && npm run seed && npm start"
+
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+    container_name: ocmanager_web
+    restart: unless-stopped
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_URL=http://localhost:3001/api
+    volumes:
+      - ./web:/app
+      - /app/node_modules
+    depends_on:
+      - api
+    networks:
+      - ocmanager_network
+
+volumes:
+  db_data:
+  uploads:
+
+networks:
+  ocmanager_network:
+    driver: bridge

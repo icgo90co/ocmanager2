@@ -1,0 +1,251 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  admin
+  cliente
+}
+
+enum EstadoOrden {
+  recibida
+  en_proceso
+  enviada
+  finalizada
+  cancelada
+}
+
+enum EstadoEnvio {
+  preparando
+  en_transito
+  retenido
+  entregado
+  devuelto
+}
+
+enum OrigenOrden {
+  archivo
+  manual
+  api
+}
+
+model User {
+  id            Int       @id @default(autoincrement())
+  nombre        String
+  email         String    @unique
+  hashPassword  String    @map("hash_password")
+  role          Role      @default(cliente)
+  clienteId     Int?      @map("cliente_id")
+  activo        Boolean   @default(true)
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  cliente       Cliente?  @relation(fields: [clienteId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  archivos      Archivo[]
+  auditLogs     AuditLog[]
+
+  @@index([email])
+  @@index([clienteId])
+  @@map("users")
+}
+
+model Cliente {
+  id            Int       @id @default(autoincrement())
+  nombreLegal   String    @map("nombre_legal")
+  nit           String    @unique
+  email         String
+  telefono      String?
+  direccion     String?
+  ciudad        String?
+  pais          String    @default("Colombia")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  users         User[]
+  ordenesCompra OrdenCompra[]
+  ordenesVenta  OrdenVenta[]
+
+  @@index([nit])
+  @@index([email])
+  @@map("clientes")
+}
+
+model Producto {
+  id            Int       @id @default(autoincrement())
+  sku           String    @unique
+  nombre        String
+  descripcion   String?   @db.Text
+  unidad        String    @default("UND")
+  precioBase    Decimal   @default(0) @map("precio_base") @db.Decimal(15, 2)
+  activo        Boolean   @default(true)
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  ocItems       OCItem[]
+  ovItems       OVItem[]
+
+  @@index([sku])
+  @@index([activo])
+  @@map("productos")
+}
+
+model OrdenCompra {
+  id            Int           @id @default(autoincrement())
+  codigoOc      String        @unique @map("codigo_oc")
+  clienteId     Int           @map("cliente_id")
+  total         Decimal       @db.Decimal(15, 2)
+  moneda        String        @default("COP")
+  estado        EstadoOrden   @default(recibida)
+  notas         String?       @db.Text
+  origen        OrigenOrden   @default(manual)
+  archivoId     Int?          @map("archivo_id")
+  createdAt     DateTime      @default(now()) @map("created_at")
+  updatedAt     DateTime      @updatedAt @map("updated_at")
+
+  cliente       Cliente       @relation(fields: [clienteId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  archivo       Archivo?      @relation(fields: [archivoId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  items         OCItem[]
+  ordenesVenta  OrdenVenta[]
+
+  @@index([codigoOc])
+  @@index([clienteId])
+  @@index([estado])
+  @@map("ordenes_compra")
+}
+
+model OCItem {
+  id              Int           @id @default(autoincrement())
+  ocId            Int           @map("oc_id")
+  productoId      Int?          @map("producto_id")
+  sku             String
+  descripcion     String
+  cantidad        Decimal       @db.Decimal(10, 2)
+  precioUnitario  Decimal       @map("precio_unitario") @db.Decimal(15, 2)
+  subtotal        Decimal       @db.Decimal(15, 2)
+
+  ordenCompra     OrdenCompra   @relation(fields: [ocId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  producto        Producto?     @relation(fields: [productoId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+
+  @@index([ocId])
+  @@index([productoId])
+  @@map("oc_items")
+}
+
+model OrdenVenta {
+  id            Int           @id @default(autoincrement())
+  codigoOv      String        @unique @map("codigo_ov")
+  ocId          Int?          @map("oc_id")
+  clienteId     Int           @map("cliente_id")
+  total         Decimal       @db.Decimal(15, 2)
+  moneda        String        @default("COP")
+  estado        EstadoOrden   @default(recibida)
+  notas         String?       @db.Text
+  createdAt     DateTime      @default(now()) @map("created_at")
+  updatedAt     DateTime      @updatedAt @map("updated_at")
+
+  ordenCompra   OrdenCompra?  @relation(fields: [ocId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  cliente       Cliente       @relation(fields: [clienteId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  items         OVItem[]
+  envio         Envio?
+
+  @@index([codigoOv])
+  @@index([ocId])
+  @@index([clienteId])
+  @@index([estado])
+  @@map("ordenes_venta")
+}
+
+model OVItem {
+  id              Int           @id @default(autoincrement())
+  ovId            Int           @map("ov_id")
+  productoId      Int?          @map("producto_id")
+  sku             String
+  descripcion     String
+  cantidad        Decimal       @db.Decimal(10, 2)
+  precioUnitario  Decimal       @map("precio_unitario") @db.Decimal(15, 2)
+  subtotal        Decimal       @db.Decimal(15, 2)
+
+  ordenVenta      OrdenVenta    @relation(fields: [ovId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  producto        Producto?     @relation(fields: [productoId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+
+  @@index([ovId])
+  @@index([productoId])
+  @@map("ov_items")
+}
+
+model Envio {
+  id                    Int           @id @default(autoincrement())
+  ovId                  Int           @unique @map("ov_id")
+  numeroEnvio           String        @unique @map("numero_envio")
+  carrier               String?
+  estadoEnvio           EstadoEnvio   @default(preparando) @map("estado_envio")
+  fechaSalida           DateTime?     @map("fecha_salida")
+  fechaEntregaEstimada  DateTime?     @map("fecha_entrega_estimada")
+  createdAt             DateTime      @default(now()) @map("created_at")
+  updatedAt             DateTime      @updatedAt @map("updated_at")
+
+  ordenVenta            OrdenVenta    @relation(fields: [ovId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  eventos               EnvioEvento[]
+
+  @@index([numeroEnvio])
+  @@index([estadoEnvio])
+  @@map("envios")
+}
+
+model EnvioEvento {
+  id            Int           @id @default(autoincrement())
+  envioId       Int           @map("envio_id")
+  timestamp     DateTime
+  ubicacion     String
+  estadoEnvio   EstadoEnvio   @map("estado_envio")
+  comentario    String?       @db.Text
+
+  envio         Envio         @relation(fields: [envioId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@index([envioId])
+  @@index([timestamp])
+  @@map("envio_eventos")
+}
+
+model Archivo {
+  id            Int       @id @default(autoincrement())
+  nombre        String
+  tipoMime      String    @map("tipo_mime")
+  tamano        Int
+  ruta          String
+  uploaderUserId Int      @map("uploader_user_id")
+  createdAt     DateTime  @default(now()) @map("created_at")
+
+  uploader      User      @relation(fields: [uploaderUserId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  ordenesCompra OrdenCompra[]
+
+  @@index([uploaderUserId])
+  @@map("archivos")
+}
+
+model AuditLog {
+  id            Int       @id @default(autoincrement())
+  userId        Int       @map("user_id")
+  entidad       String
+  entidadId     Int       @map("entidad_id")
+  accion        String
+  diffJson      String?   @map("diff_json") @db.Text
+  ip            String?
+  userAgent     String?   @map("user_agent") @db.Text
+  createdAt     DateTime  @default(now()) @map("created_at")
+
+  user          User      @relation(fields: [userId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@index([userId])
+  @@index([entidad, entidadId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}

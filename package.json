@@ -1,0 +1,39 @@
+{
+  "name": "ocmanager2",
+  "version": "1.0.0",
+  "description": "Sistema de gestión de órdenes de compra, venta y seguimiento de envíos",
+  "private": true,
+  "workspaces": [
+    "api",
+    "web"
+  ],
+  "scripts": {
+    "dev:api": "npm run dev --workspace=api",
+    "dev:web": "npm run dev --workspace=web",
+    "dev": "concurrently \"npm run dev:api\" \"npm run dev:web\"",
+    "build:api": "npm run build --workspace=api",
+    "build:web": "npm run build --workspace=web",
+    "build": "npm run build:api && npm run build:web",
+    "start:api": "npm start --workspace=api",
+    "start:web": "npm run preview --workspace=web",
+    "migrate": "npm run migrate --workspace=api",
+    "seed": "npm run seed --workspace=api",
+    "test:api": "npm test --workspace=api",
+    "test:web": "npm test --workspace=web",
+    "test": "npm run test:api && npm run test:web",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down",
+    "docker:logs": "docker compose logs -f"
+  },
+  "keywords": [
+    "orders",
+    "shipment",
+    "tracking",
+    "erp"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

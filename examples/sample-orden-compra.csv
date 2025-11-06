@@ -1,0 +1,6 @@
+sku,cantidad,precio_unitario,descripcion,moneda
+PROD-001,2,2500000,Laptop Dell Inspiron 15 - 8GB RAM - 512GB SSD,COP
+PROD-002,5,350000,Mouse Logitech MX Master 3 - Inalámbrico Ergonómico,COP
+PROD-003,3,450000,Teclado Mecánico Keychron K2 - 75% Wireless,COP
+PROD-004,1,1800000,Monitor LG UltraFine 4K 27 pulgadas,COP
+PROD-005,10,45000,Cable USB-C a USB-C - 2 metros - 100W,COP
