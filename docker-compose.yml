@@ -32,7 +32,7 @@ services:
       - NODE_ENV=production
       - DATABASE_URL=mysql://camilo:Indiana%40%4090081010@db:3306/gold
       - JWT_SECRET=${JWT_SECRET:-default-secret-change-me}
-      - CORS_ORIGIN=${CORS_ORIGIN:-*}
+      - CORS_ORIGIN=https://flow.labsacme.com
       - API_PORT=3001
     volumes:
       - uploads:/app/uploads

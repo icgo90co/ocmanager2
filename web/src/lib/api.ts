@@ -1,8 +1,7 @@
 import axios from 'axios';
 
-// Use relative URL - works in both development and production
-// Assumes API is accessible at /api path (via proxy or same domain)
-const API_URL = '/api';
+// Use API subdomain for production
+const API_URL = 'https://api1.labsacme.com/api';
 
 export const api = axios.create({
   baseURL: API_URL,
