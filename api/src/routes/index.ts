@@ -8,10 +8,14 @@ import envioRoutes from './envio.routes';
 import archivoRoutes from './archivo.routes';
 import auditRoutes from './audit.routes';
 import { apiLimiter } from '../middleware/rateLimiter';
+import { runSeed } from '../controllers/seed.controller';
 
 const router = Router();
 
 router.use(apiLimiter);
+
+// Admin utilities
+router.post('/admin/seed', runSeed);
 
 router.use('/auth', authRoutes);
 router.use('/clientes', clienteRoutes);
