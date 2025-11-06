@@ -9,7 +9,7 @@ services:
       MARIADB_USER: camilo
       MARIADB_PASSWORD: 'Indiana@@90081010'
     ports:
-      - "9858:3306"
+      - "3307:3306"
     volumes:
       - db_data:/var/lib/mysql
     networks:
