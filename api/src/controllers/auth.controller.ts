@@ -97,7 +97,7 @@ export const me = async (req: AuthRequest, res: Response, next: NextFunction) =>
         cliente: {
           select: {
             id: true,
-            nombre: true,
+            nombreLegal: true,
             email: true,
             telefono: true,
           },
