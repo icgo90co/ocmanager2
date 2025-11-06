@@ -1,4 +1,4 @@
-# Build stage (for production builds in future)
+# Build stage - compile production assets
 FROM node:20-alpine AS builder
 
 WORKDIR /app
@@ -16,24 +16,21 @@ RUN if [ -f package-lock.json ]; then \
 # Copy source code
 COPY . .
 
-# Development stage (current setup uses dev server)
-FROM node:20-alpine AS development
+# Build production assets
+RUN npm run build
+
+# Production stage - serve with static file server
+FROM node:20-alpine AS production
 
 WORKDIR /app
 
-# Copy package files
-COPY package*.json ./
+# Install serve globally
+RUN npm install -g serve
 
-# Install all dependencies (needed for dev server)
-RUN if [ -f package-lock.json ]; then \
-      npm ci --no-audit --no-fund; \
-    else \
-      npm install --no-audit --no-fund; \
-    fi
-
-# Copy source code
-COPY . .
+# Copy built files from builder
+COPY --from=builder /app/dist ./dist
 
 EXPOSE 5173
 
-CMD ["npm", "run", "dev", "--", "--host"]
+# Serve production build on port 5173
+CMD ["serve", "-s", "dist", "-l", "5173"]

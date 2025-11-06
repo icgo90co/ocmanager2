@@ -32,10 +32,9 @@ services:
       - NODE_ENV=production
       - DATABASE_URL=mysql://camilo:Indiana%40%4090081010@db:3306/gold
       - JWT_SECRET=${JWT_SECRET:-default-secret-change-me}
-      - CORS_ORIGIN=http://localhost:5173
+      - CORS_ORIGIN=${CORS_ORIGIN:-*}
+      - API_PORT=3001
     volumes:
-      - ./api:/app
-      - /app/node_modules
       - uploads:/app/uploads
     depends_on:
       db:
@@ -48,15 +47,13 @@ services:
     build:
       context: ./web
       dockerfile: Dockerfile
+      target: production
     container_name: ocmanager_web
     restart: unless-stopped
     ports:
       - "5173:5173"
     environment:
-      - VITE_API_URL=http://localhost:3001/api
-    volumes:
-      - ./web:/app
-      - /app/node_modules
+      - VITE_API_URL=${VITE_API_URL:-http://localhost:3001/api}
     depends_on:
       - api
     networks:
