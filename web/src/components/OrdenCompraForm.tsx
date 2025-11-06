@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ocApi, clienteApi, productoApi } from '@/lib/api';
+import { ocApi, clientesApi, productosApi } from '@/lib/api';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -30,7 +30,7 @@ export function OrdenCompraForm({ open, onOpenChange }: OrdenCompraFormProps) {
   const { data: clientes } = useQuery({
     queryKey: ['clientes'],
     queryFn: async () => {
-      const res = await clienteApi.getAll();
+      const res = await clientesApi.getAll();
       return res.data.data;
     },
   });
@@ -38,7 +38,7 @@ export function OrdenCompraForm({ open, onOpenChange }: OrdenCompraFormProps) {
   const { data: productos } = useQuery({
     queryKey: ['productos'],
     queryFn: async () => {
-      const res = await productoApi.getAll();
+      const res = await productosApi.getAll();
       return res.data.data;
     },
   });
