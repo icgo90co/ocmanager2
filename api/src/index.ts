@@ -14,24 +14,31 @@ dotenv.config();
 const app = express();
 const PORT = process.env.API_PORT || 3001;
 
-// Security
-app.use(helmet());
+// CORS configuration - MUST be before other middleware
+const allowedOrigin = process.env.CORS_ORIGIN || 'http://localhost:5173';
+logger.info(`🔐 CORS configured for origin: ${allowedOrigin}`);
 
-// CORS configuration
 const corsOptions = {
-  origin: process.env.CORS_ORIGIN || 'http://localhost:5173',
+  origin: allowedOrigin,
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
   exposedHeaders: ['Set-Cookie'],
   maxAge: 86400, // 24 hours
+  preflightContinue: false,
   optionsSuccessStatus: 204,
 };
 
+// Apply CORS FIRST
 app.use(cors(corsOptions));
 
 // Handle preflight requests explicitly
 app.options('*', cors(corsOptions));
+
+// Security (after CORS)
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: "cross-origin" }
+}));
 
 // Logging
 app.use(pinoHttp({ logger }));
@@ -50,6 +57,16 @@ app.use('/api', router);
 // Health check
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+// Debug endpoint for CORS configuration
+app.get('/api/debug/cors', (req, res) => {
+  res.json({
+    corsOrigin: process.env.CORS_ORIGIN,
+    nodeEnv: process.env.NODE_ENV,
+    requestOrigin: req.headers.origin,
+    allowedOrigin: allowedOrigin,
+  });
 });
 
 // Error handling
