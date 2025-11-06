@@ -4,7 +4,7 @@ import { ocApi, ovApi, enviosApi } from '@/lib/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { FileText, ShoppingCart, Truck, TrendingUp } from 'lucide-react';
-import { formatCurrency, formatDate } from '@/lib/utils';
+import { formatCurrency } from '@/lib/utils';
 
 export default function DashboardPage() {
   const user = useAuthStore((state) => state.user);
@@ -35,10 +35,6 @@ export default function DashboardPage() {
 
   const ocPendientes = ordenesCompra?.filter((oc: any) => 
     ['recibida', 'en_proceso'].includes(oc.estado)
-  ).length || 0;
-
-  const ovActivas = ordenesVenta?.filter((ov: any) => 
-    ['en_proceso', 'enviada'].includes(ov.estado)
   ).length || 0;
 
   const enviosActivos = envios?.filter((e: any) => 
