@@ -10,6 +10,8 @@ export const login = async (req: AuthRequest, res: Response, next: NextFunction)
   try {
     const { email, password } = req.body;
 
+    logger.info(`Login attempt for email: ${email}`);
+
     if (!email || !password) {
       throw new ApiError(400, 'Email y contraseña son requeridos');
     }
@@ -20,12 +22,14 @@ export const login = async (req: AuthRequest, res: Response, next: NextFunction)
     });
 
     if (!user || !user.activo) {
+      logger.warn(`Login failed: user not found or inactive - ${email}`);
       throw new ApiError(401, 'Credenciales inválidas');
     }
 
     const isValidPassword = await bcrypt.compare(password, user.hashPassword);
 
     if (!isValidPassword) {
+      logger.warn(`Login failed: invalid password - ${email}`);
       throw new ApiError(401, 'Credenciales inválidas');
     }
 
@@ -40,14 +44,15 @@ export const login = async (req: AuthRequest, res: Response, next: NextFunction)
       { expiresIn: '7d' }
     );
 
+    // Cookie configuration for cross-domain setup
     res.cookie('token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax', // 'none' required for cross-domain
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 días
     });
 
-    logger.info(`User logged in: ${user.email}`);
+    logger.info(`User logged in successfully: ${user.email}`);
 
     res.json({
       success: true,
@@ -64,6 +69,7 @@ export const login = async (req: AuthRequest, res: Response, next: NextFunction)
       },
     });
   } catch (error) {
+    logger.error(`Login error: ${error}`);
     next(error);
   }
 };
