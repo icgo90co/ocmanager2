@@ -93,6 +93,8 @@ export const enviosApi = {
   createFromOV: (ovId: number, data: any) =>
     api.post(`/envios/ov/${ovId}/crear`, data),
   addEvento: (id: number, data: any) => api.post(`/envios/${id}/eventos`, data),
+  updateEstado: (id: number, estado: string) =>
+    api.patch(`/envios/${id}`, { estadoEnvio: estado }),
   getEventos: (id: number) => api.get(`/envios/${id}/eventos`),
 };
 
