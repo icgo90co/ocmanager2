@@ -32,21 +32,23 @@ export default function OrdenesCompraPage() {
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Gestión de Órdenes de Compra</h1>
           <p className="text-gray-600 mt-2">
-            Crea, visualice y gestione todas las órdenes de compra.
+            {user?.role === 'admin' 
+              ? 'Crea, visualice y gestione todas las órdenes de compra.'
+              : 'Sube y consulta tus órdenes de compra.'}
           </p>
         </div>
-        {user?.role === 'admin' && (
-          <div className="flex gap-3">
-            <Button variant="outline">
-              <Upload className="h-4 w-4 mr-2" />
-              Subir Archivo
-            </Button>
+        <div className="flex gap-3">
+          <Button variant="outline">
+            <Upload className="h-4 w-4 mr-2" />
+            Subir Archivo
+          </Button>
+          {user?.role === 'admin' && (
             <Button onClick={() => setShowCreateForm(true)}>
               <Plus className="h-4 w-4 mr-2" />
               Nueva Orden
             </Button>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       <OrdenCompraForm open={showCreateForm} onOpenChange={setShowCreateForm} />
