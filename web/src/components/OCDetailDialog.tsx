@@ -167,7 +167,10 @@ export function OCDetailDialog({ open, onOpenChange, ocId }: OCDetailDialogProps
                     <select
                       className="border rounded-md px-3 py-1.5 text-sm"
                       value={newEstado || oc.estado}
-                      onChange={(e) => setNewEstado(e.target.value)}
+                      onChange={(e) => {
+                        console.log('Estado seleccionado:', e.target.value, 'Estado actual:', oc.estado);
+                        setNewEstado(e.target.value);
+                      }}
                     >
                       <option value="recibida">Recibida</option>
                       <option value="procesando">Procesando</option>
@@ -183,6 +186,11 @@ export function OCDetailDialog({ open, onOpenChange, ocId }: OCDetailDialogProps
                       {cambiarEstadoMutation.isPending ? 'Actualizando...' : 'Actualizar'}
                     </Button>
                   </div>
+                  {cambiarEstadoMutation.isError && (
+                    <div className="text-sm text-red-600 bg-red-50 p-2 rounded">
+                      ❌ Error al actualizar el estado. Revisa la consola para más detalles.
+                    </div>
+                  )}
 
                   {/* Generate OV */}
                   <Button
