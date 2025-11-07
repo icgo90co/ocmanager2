@@ -236,6 +236,7 @@ export const updateEnvio = async (req: AuthRequest, res: Response, next: NextFun
         data: {
           envioId: envio.id,
           timestamp: new Date(),
+          ubicacion: 'Sistema',
           estadoEnvio,
           comentario: observaciones || `Estado cambiado a ${estadoEnvio}`,
         },
