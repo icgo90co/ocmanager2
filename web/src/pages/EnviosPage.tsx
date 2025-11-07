@@ -8,9 +8,11 @@ import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { formatDate } from '@/lib/utils';
 import { Eye, Package } from 'lucide-react';
+import { EnvioDetailDialog } from '@/components/EnvioDetailDialog';
 
 export default function EnviosPage() {
   const [search, setSearch] = useState('');
+  const [selectedEnvioId, setSelectedEnvioId] = useState<number | null>(null);
 
   const { data: envios, isLoading } = useQuery({
     queryKey: ['envios', search],
@@ -52,6 +54,12 @@ export default function EnviosPage() {
           </p>
         </div>
       </div>
+
+      <EnvioDetailDialog 
+        open={!!selectedEnvioId} 
+        onOpenChange={(open) => !open && setSelectedEnvioId(null)} 
+        envioId={selectedEnvioId || 0} 
+      />
 
       <Card>
         <CardHeader>
@@ -104,7 +112,11 @@ export default function EnviosPage() {
                       {envio.fechaEntregaEstimada ? formatDate(envio.fechaEntregaEstimada) : '-'}
                     </TableCell>
                     <TableCell>
-                      <Button variant="ghost" size="icon">
+                      <Button 
+                        variant="ghost" 
+                        size="icon"
+                        onClick={() => setSelectedEnvioId(envio.id)}
+                      >
                         <Eye className="h-4 w-4" />
                       </Button>
                     </TableCell>

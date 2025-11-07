@@ -9,10 +9,12 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { Plus, Upload, Eye } from 'lucide-react';
 import { OrdenCompraForm } from '@/components/OrdenCompraForm';
+import { OCDetailDialog } from '@/components/OCDetailDialog';
 
 export default function OrdenesCompraPage() {
   const [search, setSearch] = useState('');
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [selectedOcId, setSelectedOcId] = useState<number | null>(null);
 
   const { data: ordenes, isLoading } = useQuery({
     queryKey: ['ordenes-compra', search],
@@ -44,6 +46,11 @@ export default function OrdenesCompraPage() {
       </div>
 
       <OrdenCompraForm open={showCreateForm} onOpenChange={setShowCreateForm} />
+      <OCDetailDialog 
+        open={!!selectedOcId} 
+        onOpenChange={(open) => !open && setSelectedOcId(null)}
+        ocId={selectedOcId || 0}
+      />
 
       <Card>
         <CardHeader>
@@ -86,7 +93,11 @@ export default function OrdenesCompraPage() {
                     <TableCell>{formatCurrency(orden.total)}</TableCell>
                     <TableCell>
                       <div className="flex gap-2">
-                        <Button variant="ghost" size="icon">
+                        <Button 
+                          variant="ghost" 
+                          size="icon"
+                          onClick={() => setSelectedOcId(orden.id)}
+                        >
                           <Eye className="h-4 w-4" />
                         </Button>
                       </div>

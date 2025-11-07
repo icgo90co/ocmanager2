@@ -9,10 +9,12 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { Plus, Eye } from 'lucide-react';
 import { OrdenVentaForm } from '@/components/OrdenVentaForm';
+import { OVDetailDialog } from '@/components/OVDetailDialog';
 
 export default function OrdenesVentaPage() {
   const [search, setSearch] = useState('');
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [selectedOvId, setSelectedOvId] = useState<number | null>(null);
 
   const { data: ordenes, isLoading } = useQuery({
     queryKey: ['ordenes-venta', search],
@@ -38,6 +40,11 @@ export default function OrdenesVentaPage() {
       </div>
 
       <OrdenVentaForm open={showCreateForm} onOpenChange={setShowCreateForm} />
+      <OVDetailDialog 
+        open={!!selectedOvId} 
+        onOpenChange={(open) => !open && setSelectedOvId(null)} 
+        ovId={selectedOvId || 0} 
+      />
 
       <Card>
         <CardHeader>
@@ -79,7 +86,11 @@ export default function OrdenesVentaPage() {
                     </TableCell>
                     <TableCell>{formatCurrency(orden.total)}</TableCell>
                     <TableCell>
-                      <Button variant="ghost" size="icon">
+                      <Button 
+                        variant="ghost" 
+                        size="icon"
+                        onClick={() => setSelectedOvId(orden.id)}
+                      >
                         <Eye className="h-4 w-4" />
                       </Button>
                     </TableCell>
