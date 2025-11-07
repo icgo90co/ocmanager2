@@ -107,6 +107,13 @@ export function OrdenVentaForm({ open, onOpenChange, ocId }: OrdenVentaFormProps
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Validación manual de items
+    const hasEmptyItems = items.some(item => !item.sku || !item.descripcion || !item.precioUnitario);
+    if (hasEmptyItems) {
+      alert('Por favor completa todos los campos de los ítems (SKU, Descripción y Precio)');
+      return;
+    }
+    
     const data = {
       codigoOv,
       clienteId: parseInt(clienteId),
@@ -232,7 +239,6 @@ export function OrdenVentaForm({ open, onOpenChange, ocId }: OrdenVentaFormProps
                         onChange={(e) => handleProductoSelect(index, e.target.value)}
                         list={`productos-list-ov-${index}`}
                         placeholder="Escribe o selecciona"
-                        required
                         className="text-sm"
                       />
                       <datalist id={`productos-list-ov-${index}`}>
@@ -250,7 +256,6 @@ export function OrdenVentaForm({ open, onOpenChange, ocId }: OrdenVentaFormProps
                         value={item.descripcion}
                         onChange={(e) => updateItem(index, 'descripcion', e.target.value)}
                         placeholder="Descripción del producto"
-                        required
                         className="text-sm"
                       />
                     </div>
@@ -263,7 +268,6 @@ export function OrdenVentaForm({ open, onOpenChange, ocId }: OrdenVentaFormProps
                         step="1"
                         value={item.cantidad}
                         onChange={(e) => updateItem(index, 'cantidad', parseInt(e.target.value) || 1)}
-                        required
                         className="text-sm"
                       />
                     </div>
@@ -276,7 +280,6 @@ export function OrdenVentaForm({ open, onOpenChange, ocId }: OrdenVentaFormProps
                         step="0.01"
                         value={item.precioUnitario}
                         onChange={(e) => updateItem(index, 'precioUnitario', parseFloat(e.target.value) || 0)}
-                        required
                         className="text-sm"
                       />
                     </div>
