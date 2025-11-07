@@ -60,7 +60,7 @@ export function OCDetailDialog({ open, onOpenChange, ocId }: OCDetailDialogProps
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-6xl max-h-[95vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <FileText className="h-5 w-5" />
@@ -73,7 +73,7 @@ export function OCDetailDialog({ open, onOpenChange, ocId }: OCDetailDialogProps
         ) : oc ? (
           <div className="space-y-6">
             {/* Header Info */}
-            <div className="grid grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg">
+            <div className="grid grid-cols-3 gap-4 p-4 bg-gray-50 rounded-lg">
               <div>
                 <label className="text-sm font-medium text-gray-600">Código OC</label>
                 <p className="text-lg font-bold">{oc.codigoOc}</p>
@@ -85,12 +85,12 @@ export function OCDetailDialog({ open, onOpenChange, ocId }: OCDetailDialogProps
                 </div>
               </div>
               <div>
-                <label className="text-sm font-medium text-gray-600">Cliente</label>
-                <p className="font-medium">{oc.cliente?.nombreLegal}</p>
-              </div>
-              <div>
                 <label className="text-sm font-medium text-gray-600">Fecha</label>
                 <p>{formatDate(oc.createdAt)}</p>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-600">Cliente</label>
+                <p className="font-medium">{oc.cliente?.nombreLegal}</p>
               </div>
               <div>
                 <label className="text-sm font-medium text-gray-600">Origen</label>

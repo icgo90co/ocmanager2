@@ -52,7 +52,7 @@ export function EnvioDetailDialog({ open, onOpenChange, envioId }: EnvioDetailDi
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-6xl max-h-[95vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Truck className="h-5 w-5" />
@@ -65,7 +65,7 @@ export function EnvioDetailDialog({ open, onOpenChange, envioId }: EnvioDetailDi
         ) : envio ? (
           <div className="space-y-6">
             {/* Header Info */}
-            <div className="grid grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg">
+            <div className="grid grid-cols-4 gap-4 p-4 bg-gray-50 rounded-lg">
               <div>
                 <label className="text-sm font-medium text-gray-600">Número de Envío</label>
                 <p className="text-lg font-bold">{envio.numeroEnvio}</p>
