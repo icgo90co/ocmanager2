@@ -201,3 +201,61 @@ export const getEventos = async (req: AuthRequest, res: Response, next: NextFunc
     next(error);
   }
 };
+
+export const updateEnvio = async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    const { id } = req.params;
+    const { estadoEnvio, observaciones } = req.body;
+
+    const envio = await prisma.envio.findUnique({
+      where: { id: parseInt(id) },
+    });
+
+    if (!envio) {
+      throw new ApiError(404, 'Envío no encontrado');
+    }
+
+    // Actualizar el envío
+    const updatedEnvio = await prisma.envio.update({
+      where: { id: parseInt(id) },
+      data: { estadoEnvio },
+      include: {
+        ordenVenta: {
+          include: {
+            cliente: true,
+            items: { include: { producto: true } },
+          },
+        },
+        eventos: { orderBy: { timestamp: 'asc' } },
+      },
+    });
+
+    // Crear evento de seguimiento
+    if (estadoEnvio) {
+      await prisma.envioEvento.create({
+        data: {
+          envioId: envio.id,
+          timestamp: new Date(),
+          estadoEnvio,
+          comentario: observaciones || `Estado cambiado a ${estadoEnvio}`,
+        },
+      });
+    }
+
+    await prisma.auditLog.create({
+      data: {
+        userId: req.user!.id,
+        entidad: 'Envio',
+        entidadId: envio.id,
+        accion: 'UPDATE',
+        diffJson: JSON.stringify({ estadoEnvio, observaciones }),
+        ip: req.ip,
+        userAgent: req.headers['user-agent'],
+      },
+    });
+
+    res.json({ success: true, data: updatedEnvio });
+  } catch (error) {
+    next(error);
+  }
+};

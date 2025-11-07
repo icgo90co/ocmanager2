@@ -159,14 +159,14 @@ export function EnvioDetailDialog({ open, onOpenChange, envioId }: EnvioDetailDi
                       <div className="flex-shrink-0 w-2 h-2 mt-1.5 rounded-full bg-blue-600"></div>
                       <div className="flex-1">
                         <div className="flex items-center justify-between mb-1">
-                          <p className="font-medium text-sm">{evento.estado}</p>
-                          <span className="text-xs text-gray-500">{formatDate(evento.fecha)}</span>
+                          <p className="font-medium text-sm">{evento.estadoEnvio}</p>
+                          <span className="text-xs text-gray-500">{formatDate(evento.timestamp)}</span>
                         </div>
                         {evento.ubicacion && (
                           <p className="text-xs text-gray-600">📍 {evento.ubicacion}</p>
                         )}
-                        {evento.observaciones && (
-                          <p className="text-xs text-gray-700 mt-1">{evento.observaciones}</p>
+                        {evento.comentario && (
+                          <p className="text-xs text-gray-700 mt-1">{evento.comentario}</p>
                         )}
                       </div>
                     </div>

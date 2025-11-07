@@ -8,6 +8,7 @@ router.use(authenticate);
 
 router.get('/', envioController.getAll);
 router.get('/:id', envioController.getById);
+router.patch('/:id', isAdmin, envioController.updateEnvio);
 router.post('/ov/:ovId/crear', isAdmin, envioController.createFromOV);
 router.post('/:id/eventos', isAdmin, envioController.addEvento);
 router.get('/:id/eventos', envioController.getEventos);
