@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ovApi } from '@/lib/api';
+import { useAuthStore } from '@/store/authStore';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -16,6 +17,7 @@ interface OVDetailDialogProps {
 
 export function OVDetailDialog({ open, onOpenChange, ovId }: OVDetailDialogProps) {
   const queryClient = useQueryClient();
+  const user = useAuthStore((state) => state.user);
   const [newEstado, setNewEstado] = useState('');
 
   const { data: ov, isLoading } = useQuery({
@@ -156,41 +158,43 @@ export function OVDetailDialog({ open, onOpenChange, ovId }: OVDetailDialogProps
               </div>
             )}
 
-            {/* Actions */}
-            <div className="border-t pt-4 space-y-4">
-              <div>
-                <h3 className="text-lg font-semibold mb-3">Acciones</h3>
-                
-                {/* Change Estado */}
-                <div className="flex items-center gap-3 mb-3">
-                  <label className="text-sm font-medium">Cambiar Estado:</label>
-                  <select
-                    className="border rounded-md px-3 py-1.5 text-sm"
-                    value={newEstado || ov.estado}
-                    onChange={(e) => setNewEstado(e.target.value)}
-                  >
-                    <option value="recibida">Recibida</option>
-                    <option value="en_proceso">En Proceso</option>
-                    <option value="enviada">Enviada</option>
-                    <option value="finalizada">Finalizada</option>
-                    <option value="cancelada">Cancelada</option>
-                  </select>
-                  <Button
-                    size="sm"
-                    onClick={handleCambiarEstado}
-                    disabled={!newEstado || newEstado === ov.estado || cambiarEstadoMutation.isPending}
-                  >
-                    {cambiarEstadoMutation.isPending ? 'Actualizando...' : 'Actualizar'}
-                  </Button>
-                </div>
+            {/* Actions - Solo para administradores */}
+            {user?.role === 'admin' && (
+              <div className="border-t pt-4 space-y-4">
+                <div>
+                  <h3 className="text-lg font-semibold mb-3">Acciones</h3>
+                  
+                  {/* Change Estado */}
+                  <div className="flex items-center gap-3 mb-3">
+                    <label className="text-sm font-medium">Cambiar Estado:</label>
+                    <select
+                      className="border rounded-md px-3 py-1.5 text-sm"
+                      value={newEstado || ov.estado}
+                      onChange={(e) => setNewEstado(e.target.value)}
+                    >
+                      <option value="recibida">Recibida</option>
+                      <option value="en_proceso">En Proceso</option>
+                      <option value="enviada">Enviada</option>
+                      <option value="finalizada">Finalizada</option>
+                      <option value="cancelada">Cancelada</option>
+                    </select>
+                    <Button
+                      size="sm"
+                      onClick={handleCambiarEstado}
+                      disabled={!newEstado || newEstado === ov.estado || cambiarEstadoMutation.isPending}
+                    >
+                      {cambiarEstadoMutation.isPending ? 'Actualizando...' : 'Actualizar'}
+                    </Button>
+                  </div>
 
-                {newEstado === 'enviada' && !ov.envio && (
-                  <p className="text-sm text-blue-600 bg-blue-50 p-2 rounded">
-                    ℹ️ Al marcar como "enviada" se creará automáticamente un envío
-                  </p>
-                )}
+                  {newEstado === 'enviada' && !ov.envio && (
+                    <p className="text-sm text-blue-600 bg-blue-50 p-2 rounded">
+                      ℹ️ Al marcar como "enviada" se creará automáticamente un envío
+                    </p>
+                  )}
+                </div>
               </div>
-            </div>
+            )}
 
             <DialogFooter>
               <Button variant="outline" onClick={() => onOpenChange(false)}>

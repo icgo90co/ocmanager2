@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ocApi, ovApi } from '@/lib/api';
+import { useAuthStore } from '@/store/authStore';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -16,6 +17,7 @@ interface OCDetailDialogProps {
 
 export function OCDetailDialog({ open, onOpenChange, ocId }: OCDetailDialogProps) {
   const queryClient = useQueryClient();
+  const user = useAuthStore((state) => state.user);
   const [newEstado, setNewEstado] = useState('');
 
   const { data: oc, isLoading } = useQuery({
@@ -139,46 +141,48 @@ export function OCDetailDialog({ open, onOpenChange, ocId }: OCDetailDialogProps
               </Table>
             </div>
 
-            {/* Actions */}
-            <div className="border-t pt-4 space-y-4">
-              <div>
-                <h3 className="text-lg font-semibold mb-3">Acciones</h3>
-                
-                {/* Change Estado */}
-                <div className="flex items-center gap-3 mb-3">
-                  <label className="text-sm font-medium">Cambiar Estado:</label>
-                  <select
-                    className="border rounded-md px-3 py-1.5 text-sm"
-                    value={newEstado || oc.estado}
-                    onChange={(e) => setNewEstado(e.target.value)}
-                  >
-                    <option value="recibida">Recibida</option>
-                    <option value="en_proceso">En Proceso</option>
-                    <option value="enviada">Enviada</option>
-                    <option value="finalizada">Finalizada</option>
-                    <option value="cancelada">Cancelada</option>
-                  </select>
+            {/* Actions - Solo para administradores */}
+            {user?.role === 'admin' && (
+              <div className="border-t pt-4 space-y-4">
+                <div>
+                  <h3 className="text-lg font-semibold mb-3">Acciones</h3>
+                  
+                  {/* Change Estado */}
+                  <div className="flex items-center gap-3 mb-3">
+                    <label className="text-sm font-medium">Cambiar Estado:</label>
+                    <select
+                      className="border rounded-md px-3 py-1.5 text-sm"
+                      value={newEstado || oc.estado}
+                      onChange={(e) => setNewEstado(e.target.value)}
+                    >
+                      <option value="recibida">Recibida</option>
+                      <option value="en_proceso">En Proceso</option>
+                      <option value="enviada">Enviada</option>
+                      <option value="finalizada">Finalizada</option>
+                      <option value="cancelada">Cancelada</option>
+                    </select>
+                    <Button
+                      size="sm"
+                      onClick={handleCambiarEstado}
+                      disabled={!newEstado || newEstado === oc.estado || cambiarEstadoMutation.isPending}
+                    >
+                      {cambiarEstadoMutation.isPending ? 'Actualizando...' : 'Actualizar'}
+                    </Button>
+                  </div>
+
+                  {/* Generate OV */}
                   <Button
-                    size="sm"
-                    onClick={handleCambiarEstado}
-                    disabled={!newEstado || newEstado === oc.estado || cambiarEstadoMutation.isPending}
+                    variant="outline"
+                    onClick={() => generarOVMutation.mutate()}
+                    disabled={generarOVMutation.isPending || oc.estado === 'cancelada'}
+                    className="w-full sm:w-auto"
                   >
-                    {cambiarEstadoMutation.isPending ? 'Actualizando...' : 'Actualizar'}
+                    <Package className="h-4 w-4 mr-2" />
+                    {generarOVMutation.isPending ? 'Generando...' : 'Generar Orden de Venta'}
                   </Button>
                 </div>
-
-                {/* Generate OV */}
-                <Button
-                  variant="outline"
-                  onClick={() => generarOVMutation.mutate()}
-                  disabled={generarOVMutation.isPending || oc.estado === 'cancelada'}
-                  className="w-full sm:w-auto"
-                >
-                  <Package className="h-4 w-4 mr-2" />
-                  {generarOVMutation.isPending ? 'Generando...' : 'Generar Orden de Venta'}
-                </Button>
               </div>
-            </div>
+            )}
 
             <DialogFooter>
               <Button variant="outline" onClick={() => onOpenChange(false)}>

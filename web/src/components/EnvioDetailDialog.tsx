@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { enviosApi } from '@/lib/api';
+import { useAuthStore } from '@/store/authStore';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -16,6 +17,7 @@ interface EnvioDetailDialogProps {
 
 export function EnvioDetailDialog({ open, onOpenChange, envioId }: EnvioDetailDialogProps) {
   const queryClient = useQueryClient();
+  const user = useAuthStore((state) => state.user);
   const [newEstado, setNewEstado] = useState('');
   const [observaciones, setObservaciones] = useState('');
 
@@ -175,50 +177,52 @@ export function EnvioDetailDialog({ open, onOpenChange, envioId }: EnvioDetailDi
               </div>
             )}
 
-            {/* Actions */}
-            <div className="border-t pt-4 space-y-4">
-              <div>
-                <h3 className="text-lg font-semibold mb-3">Actualizar Estado</h3>
-                
-                <div className="space-y-3">
-                  <div className="flex items-center gap-3">
-                    <label className="text-sm font-medium min-w-[100px]">Nuevo Estado:</label>
-                    <select
-                      className="border rounded-md px-3 py-1.5 text-sm flex-1"
-                      value={newEstado || envio.estadoEnvio}
-                      onChange={(e) => setNewEstado(e.target.value)}
-                    >
-                      <option value="pendiente">Pendiente</option>
-                      <option value="en_transito">En Tránsito</option>
-                      <option value="en_distribucion">En Distribución</option>
-                      <option value="entregado">Entregado</option>
-                      <option value="devuelto">Devuelto</option>
-                      <option value="cancelado">Cancelado</option>
-                    </select>
-                  </div>
+            {/* Actions - Solo para administradores */}
+            {user?.role === 'admin' && (
+              <div className="border-t pt-4 space-y-4">
+                <div>
+                  <h3 className="text-lg font-semibold mb-3">Actualizar Estado</h3>
+                  
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3">
+                      <label className="text-sm font-medium min-w-[100px]">Nuevo Estado:</label>
+                      <select
+                        className="border rounded-md px-3 py-1.5 text-sm flex-1"
+                        value={newEstado || envio.estadoEnvio}
+                        onChange={(e) => setNewEstado(e.target.value)}
+                      >
+                        <option value="pendiente">Pendiente</option>
+                        <option value="en_transito">En Tránsito</option>
+                        <option value="en_distribucion">En Distribución</option>
+                        <option value="entregado">Entregado</option>
+                        <option value="devuelto">Devuelto</option>
+                        <option value="cancelado">Cancelado</option>
+                      </select>
+                    </div>
 
-                  <div className="flex items-start gap-3">
-                    <label className="text-sm font-medium min-w-[100px] mt-2">Observaciones:</label>
-                    <textarea
-                      className="border rounded-md px-3 py-2 text-sm flex-1"
-                      rows={2}
-                      value={observaciones}
-                      onChange={(e) => setObservaciones(e.target.value)}
-                      placeholder="Agregar detalles sobre el cambio de estado..."
-                    />
-                  </div>
+                    <div className="flex items-start gap-3">
+                      <label className="text-sm font-medium min-w-[100px] mt-2">Observaciones:</label>
+                      <textarea
+                        className="border rounded-md px-3 py-2 text-sm flex-1"
+                        rows={2}
+                        value={observaciones}
+                        onChange={(e) => setObservaciones(e.target.value)}
+                        placeholder="Agregar detalles sobre el cambio de estado..."
+                      />
+                    </div>
 
-                  <div className="flex justify-end">
-                    <Button
-                      onClick={handleActualizarEstado}
-                      disabled={!newEstado || newEstado === envio.estadoEnvio || actualizarEstadoMutation.isPending}
-                    >
-                      {actualizarEstadoMutation.isPending ? 'Actualizando...' : 'Actualizar Estado'}
-                    </Button>
+                    <div className="flex justify-end">
+                      <Button
+                        onClick={handleActualizarEstado}
+                        disabled={!newEstado || newEstado === envio.estadoEnvio || actualizarEstadoMutation.isPending}
+                      >
+                        {actualizarEstadoMutation.isPending ? 'Actualizando...' : 'Actualizar Estado'}
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
+            )}
 
             <DialogFooter>
               <Button variant="outline" onClick={() => onOpenChange(false)}>
