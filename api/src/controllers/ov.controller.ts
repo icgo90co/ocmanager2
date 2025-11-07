@@ -5,11 +5,10 @@ import prisma from '../utils/prisma';
 import { Decimal } from '@prisma/client/runtime/library';
 
 const VALID_TRANSITIONS: Record<string, string[]> = {
-  recibida: ['en_proceso', 'cancelada'],
-  en_proceso: ['enviada', 'cancelada'],
-  enviada: ['finalizada', 'cancelada'],
-  finalizada: [],
-  cancelada: [],
+  recibida: ['procesando'],
+  procesando: ['en_despacho'],
+  en_despacho: ['procesada'],
+  procesada: [],
 };
 
 export const getAll = async (req: AuthRequest, res: Response, next: NextFunction) => {
@@ -188,7 +187,7 @@ export const update = async (req: AuthRequest, res: Response, next: NextFunction
       throw new ApiError(404, 'Orden no encontrada');
     }
 
-    if (['enviada', 'finalizada', 'cancelada'].includes(orden.estado)) {
+    if (['procesada'].includes(orden.estado)) {
       throw new ApiError(400, 'No se puede editar una orden en estado ' + orden.estado);
     }
 

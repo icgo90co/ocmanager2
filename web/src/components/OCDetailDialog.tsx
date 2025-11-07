@@ -156,10 +156,10 @@ export function OCDetailDialog({ open, onOpenChange, ocId }: OCDetailDialogProps
                       onChange={(e) => setNewEstado(e.target.value)}
                     >
                       <option value="recibida">Recibida</option>
-                      <option value="en_proceso">En Proceso</option>
-                      <option value="enviada">Enviada</option>
-                      <option value="finalizada">Finalizada</option>
-                      <option value="cancelada">Cancelada</option>
+                      <option value="procesando">Procesando</option>
+                      <option value="pendiente_ajustes">Pendiente Ajustes</option>
+                      <option value="procesada">Procesada</option>
+                      <option value="anulada">Anulada</option>
                     </select>
                     <Button
                       size="sm"
@@ -174,7 +174,7 @@ export function OCDetailDialog({ open, onOpenChange, ocId }: OCDetailDialogProps
                   <Button
                     variant="outline"
                     onClick={() => generarOVMutation.mutate()}
-                    disabled={generarOVMutation.isPending || oc.estado === 'cancelada'}
+                    disabled={generarOVMutation.isPending || oc.estado === 'anulada'}
                     className="w-full sm:w-auto"
                   >
                     <Package className="h-4 w-4 mr-2" />

@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { ovApi } from '@/lib/api';
+import { ovApi, enviosApi } from '@/lib/api';
 import { useAuthStore } from '@/store/authStore';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { FileText, Truck } from 'lucide-react';
@@ -19,6 +20,10 @@ export function OVDetailDialog({ open, onOpenChange, ovId }: OVDetailDialogProps
   const queryClient = useQueryClient();
   const user = useAuthStore((state) => state.user);
   const [newEstado, setNewEstado] = useState('');
+  const [showEnvioForm, setShowEnvioForm] = useState(false);
+  const [carrier, setCarrier] = useState('');
+  const [fechaSalida, setFechaSalida] = useState('');
+  const [fechaEntregaEstimada, setFechaEntregaEstimada] = useState('');
 
   const { data: ov, isLoading } = useQuery({
     queryKey: ['ov-detail', ovId],
@@ -40,13 +45,42 @@ export function OVDetailDialog({ open, onOpenChange, ovId }: OVDetailDialogProps
     },
   });
 
+  const crearEnvioMutation = useMutation({
+    mutationFn: async (data: any) => {
+      return await enviosApi.createFromOV(ovId, data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['envios'] });
+      queryClient.invalidateQueries({ queryKey: ['ordenes-venta'] });
+      queryClient.invalidateQueries({ queryKey: ['ov-detail', ovId] });
+      setShowEnvioForm(false);
+      setCarrier('');
+      setFechaSalida('');
+      setFechaEntregaEstimada('');
+      alert('Envío creado exitosamente');
+    },
+    onError: (error: any) => {
+      alert(error.response?.data?.message || 'Error al crear el envío');
+    },
+  });
+
   const handleCambiarEstado = () => {
     if (newEstado && newEstado !== ov?.estado) {
       cambiarEstadoMutation.mutate(newEstado);
-      if (newEstado === 'enviada') {
-        alert('Cuando la OV se marca como "enviada", se crea automáticamente un envío.');
-      }
     }
+  };
+
+  const handleCrearEnvio = () => {
+    if (!carrier.trim()) {
+      alert('Por favor ingresa el nombre del carrier/transportadora');
+      return;
+    }
+
+    const data: any = { carrier };
+    if (fechaSalida) data.fechaSalida = fechaSalida;
+    if (fechaEntregaEstimada) data.fechaEntregaEstimada = fechaEntregaEstimada;
+
+    crearEnvioMutation.mutate(data);
   };
 
   if (!open) return null;
@@ -173,10 +207,9 @@ export function OVDetailDialog({ open, onOpenChange, ovId }: OVDetailDialogProps
                       onChange={(e) => setNewEstado(e.target.value)}
                     >
                       <option value="recibida">Recibida</option>
-                      <option value="en_proceso">En Proceso</option>
-                      <option value="enviada">Enviada</option>
-                      <option value="finalizada">Finalizada</option>
-                      <option value="cancelada">Cancelada</option>
+                      <option value="procesando">Procesando</option>
+                      <option value="en_despacho">En Despacho</option>
+                      <option value="procesada">Procesada</option>
                     </select>
                     <Button
                       size="sm"
@@ -187,10 +220,82 @@ export function OVDetailDialog({ open, onOpenChange, ovId }: OVDetailDialogProps
                     </Button>
                   </div>
 
-                  {newEstado === 'enviada' && !ov.envio && (
-                    <p className="text-sm text-blue-600 bg-blue-50 p-2 rounded">
-                      ℹ️ Al marcar como "enviada" se creará automáticamente un envío
-                    </p>
+                  {/* Crear Envío - Solo cuando estado es "en_despacho" y no hay envío */}
+                  {ov.estado === 'en_despacho' && !ov.envio && (
+                    <div className="mt-4 p-4 border rounded-lg bg-blue-50">
+                      <h4 className="text-sm font-semibold mb-3 flex items-center gap-2">
+                        <Truck className="h-4 w-4" />
+                        Crear Envío
+                      </h4>
+                      {!showEnvioForm ? (
+                        <Button
+                          size="sm"
+                          onClick={() => setShowEnvioForm(true)}
+                          className="w-full"
+                        >
+                          Iniciar Creación de Envío
+                        </Button>
+                      ) : (
+                        <div className="space-y-3">
+                          <div>
+                            <label className="text-sm font-medium">
+                              Carrier/Transportadora *
+                            </label>
+                            <Input
+                              type="text"
+                              value={carrier}
+                              onChange={(e) => setCarrier(e.target.value)}
+                              placeholder="Ej: DHL, FedEx, Correo Nacional"
+                              className="mt-1"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-sm font-medium">
+                              Fecha de Salida
+                            </label>
+                            <Input
+                              type="date"
+                              value={fechaSalida}
+                              onChange={(e) => setFechaSalida(e.target.value)}
+                              className="mt-1"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-sm font-medium">
+                              Fecha Estimada de Entrega
+                            </label>
+                            <Input
+                              type="date"
+                              value={fechaEntregaEstimada}
+                              onChange={(e) => setFechaEntregaEstimada(e.target.value)}
+                              className="mt-1"
+                            />
+                          </div>
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              onClick={handleCrearEnvio}
+                              disabled={crearEnvioMutation.isPending}
+                              className="flex-1"
+                            >
+                              {crearEnvioMutation.isPending ? 'Creando...' : 'Crear Envío'}
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => {
+                                setShowEnvioForm(false);
+                                setCarrier('');
+                                setFechaSalida('');
+                                setFechaEntregaEstimada('');
+                              }}
+                            >
+                              Cancelar
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   )}
                 </div>
               </div>

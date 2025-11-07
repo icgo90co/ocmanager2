@@ -8,11 +8,11 @@ import prisma from '../utils/prisma';
 import { Decimal } from '@prisma/client/runtime/library';
 
 const VALID_TRANSITIONS: Record<string, string[]> = {
-  recibida: ['en_proceso', 'cancelada'],
-  en_proceso: ['enviada', 'cancelada'],
-  enviada: ['finalizada', 'cancelada'],
-  finalizada: [],
-  cancelada: [],
+  recibida: ['procesando', 'anulada'],
+  procesando: ['pendiente_ajustes', 'procesada', 'anulada'],
+  pendiente_ajustes: ['procesando', 'anulada'],
+  procesada: [],
+  anulada: [],
 };
 
 export const getAll = async (req: AuthRequest, res: Response, next: NextFunction) => {
@@ -291,7 +291,7 @@ export const update = async (req: AuthRequest, res: Response, next: NextFunction
     }
 
     // Solo permitir edición en ciertos estados
-    if (['enviada', 'finalizada', 'cancelada'].includes(orden.estado)) {
+    if (['procesada', 'anulada'].includes(orden.estado)) {
       throw new ApiError(400, 'No se puede editar una orden en estado ' + orden.estado);
     }
 

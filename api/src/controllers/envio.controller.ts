@@ -80,8 +80,8 @@ export const createFromOV = async (req: AuthRequest, res: Response, next: NextFu
       throw new ApiError(400, 'Esta orden ya tiene un envío asociado');
     }
 
-    if (ov.estado !== 'enviada') {
-      throw new ApiError(400, 'La orden debe estar en estado "enviada" para crear un envío');
+    if (ov.estado !== 'en_despacho') {
+      throw new ApiError(400, 'La orden debe estar en estado "en_despacho" para crear un envío');
     }
 
     const count = await prisma.envio.count();

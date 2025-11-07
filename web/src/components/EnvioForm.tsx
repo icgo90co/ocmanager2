@@ -22,8 +22,8 @@ export function EnvioForm({ open, onOpenChange }: EnvioFormProps) {
     queryKey: ['ordenes-venta-sin-envio'],
     queryFn: async () => {
       const res = await ovApi.getAll();
-      // Filtrar solo las OV que están en estado 'enviada' y no tienen envío asociado
-      return res.data.data.filter((ov: any) => ov.estado === 'enviada' && !ov.envio);
+      // Filtrar solo las OV que están en estado 'en_despacho' y no tienen envío asociado
+      return res.data.data.filter((ov: any) => ov.estado === 'en_despacho' && !ov.envio);
     },
     enabled: open,
   });
