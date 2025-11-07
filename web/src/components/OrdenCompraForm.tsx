@@ -95,7 +95,13 @@ export function OrdenCompraForm({ open, onOpenChange }: OrdenCompraFormProps) {
     e.preventDefault();
     
     // Validación manual de items
-    const hasEmptyItems = items.some(item => !item.sku || !item.descripcion || !item.precioUnitario);
+    const hasEmptyItems = items.some(item => 
+      !item.sku?.trim() || 
+      !item.descripcion?.trim() || 
+      item.precioUnitario === null || 
+      item.precioUnitario === undefined ||
+      isNaN(item.precioUnitario)
+    );
     if (hasEmptyItems) {
       alert('Por favor completa todos los campos de los ítems (SKU, Descripción y Precio)');
       return;
