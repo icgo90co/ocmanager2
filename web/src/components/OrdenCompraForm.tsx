@@ -81,6 +81,9 @@ export function OrdenCompraForm({ open, onOpenChange }: OrdenCompraFormProps) {
       updateItem(index, 'sku', producto.sku);
       updateItem(index, 'descripcion', producto.nombre);
       updateItem(index, 'precioUnitario', parseFloat(producto.precioBase));
+    } else {
+      // Si no encuentra el producto, solo actualiza el SKU (producto personalizado)
+      updateItem(index, 'sku', sku);
     }
   };
 
@@ -186,20 +189,22 @@ export function OrdenCompraForm({ open, onOpenChange }: OrdenCompraFormProps) {
 
                   <div className="grid grid-cols-4 gap-3">
                     <div>
-                      <label className="block text-sm mb-1">Producto</label>
-                      <select
-                        className="w-full border rounded-md px-2 py-1.5 text-sm"
+                      <label className="block text-sm mb-1">SKU / Producto</label>
+                      <Input
                         value={item.sku}
                         onChange={(e) => handleProductoSelect(index, e.target.value)}
+                        list={`productos-list-${index}`}
+                        placeholder="Escribe o selecciona"
                         required
-                      >
-                        <option value="">Seleccionar</option>
+                        className="text-sm"
+                      />
+                      <datalist id={`productos-list-${index}`}>
                         {productos?.map((producto: any) => (
                           <option key={producto.id} value={producto.sku}>
                             {producto.sku} - {producto.nombre}
                           </option>
                         ))}
-                      </select>
+                      </datalist>
                     </div>
 
                     <div>
@@ -207,6 +212,7 @@ export function OrdenCompraForm({ open, onOpenChange }: OrdenCompraFormProps) {
                       <Input
                         value={item.descripcion}
                         onChange={(e) => updateItem(index, 'descripcion', e.target.value)}
+                        placeholder="Descripción del producto"
                         required
                         className="text-sm"
                       />
@@ -219,7 +225,7 @@ export function OrdenCompraForm({ open, onOpenChange }: OrdenCompraFormProps) {
                         min="1"
                         step="1"
                         value={item.cantidad}
-                        onChange={(e) => updateItem(index, 'cantidad', parseInt(e.target.value))}
+                        onChange={(e) => updateItem(index, 'cantidad', parseInt(e.target.value) || 1)}
                         required
                         className="text-sm"
                       />
@@ -232,7 +238,7 @@ export function OrdenCompraForm({ open, onOpenChange }: OrdenCompraFormProps) {
                         min="0"
                         step="0.01"
                         value={item.precioUnitario}
-                        onChange={(e) => updateItem(index, 'precioUnitario', parseFloat(e.target.value))}
+                        onChange={(e) => updateItem(index, 'precioUnitario', parseFloat(e.target.value) || 0)}
                         required
                         className="text-sm"
                       />
