@@ -178,7 +178,7 @@ async function main() {
       clienteId: clienteTech.id,
       total: 2250000,
       moneda: 'COP',
-      estado: 'en_proceso',
+      estado: 'procesando',
       notas: 'Material de oficina',
       origen: 'manual',
       items: {
@@ -214,7 +214,7 @@ async function main() {
       clienteId: clienteAcme.id,
       total: 5600000,
       moneda: 'COP',
-      estado: 'enviada',
+      estado: 'en_despacho',
       notas: 'Generada desde OC-2024-00001',
       items: {
         create: [
