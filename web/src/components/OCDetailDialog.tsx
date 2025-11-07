@@ -37,6 +37,12 @@ export function OCDetailDialog({ open, onOpenChange, ocId }: OCDetailDialogProps
       queryClient.invalidateQueries({ queryKey: ['ordenes-compra'] });
       queryClient.invalidateQueries({ queryKey: ['oc-detail', ocId] });
       setNewEstado('');
+      alert('Estado actualizado exitosamente');
+    },
+    onError: (error: any) => {
+      console.error('Error al cambiar estado:', error);
+      const mensaje = error.response?.data?.message || error.message || 'Error al actualizar el estado';
+      alert(`Error: ${mensaje}`);
     },
   });
 
@@ -52,7 +58,15 @@ export function OCDetailDialog({ open, onOpenChange, ocId }: OCDetailDialogProps
 
   const handleCambiarEstado = () => {
     if (newEstado && newEstado !== oc?.estado) {
+      console.log('Cambiando estado de', oc?.estado, 'a', newEstado);
       cambiarEstadoMutation.mutate(newEstado);
+    } else {
+      console.log('No se puede cambiar estado:', { newEstado, currentEstado: oc?.estado });
+      if (!newEstado) {
+        alert('Por favor selecciona un nuevo estado');
+      } else if (newEstado === oc?.estado) {
+        alert('El estado seleccionado es el mismo que el actual');
+      }
     }
   };
 
