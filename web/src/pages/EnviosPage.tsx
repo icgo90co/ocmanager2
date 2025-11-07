@@ -1,18 +1,22 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { enviosApi } from '@/lib/api';
+import { useAuthStore } from '@/store/authStore';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { formatDate } from '@/lib/utils';
-import { Eye, Package } from 'lucide-react';
+import { Eye, Package, Plus } from 'lucide-react';
 import { EnvioDetailDialog } from '@/components/EnvioDetailDialog';
+import { EnvioForm } from '@/components/EnvioForm';
 
 export default function EnviosPage() {
+  const user = useAuthStore((state) => state.user);
   const [search, setSearch] = useState('');
   const [selectedEnvioId, setSelectedEnvioId] = useState<number | null>(null);
+  const [showCreateForm, setShowCreateForm] = useState(false);
 
   const { data: envios, isLoading } = useQuery({
     queryKey: ['envios', search],
@@ -53,8 +57,15 @@ export default function EnviosPage() {
             Rastrea y gestiona todos los envíos.
           </p>
         </div>
+        {user?.role === 'admin' && (
+          <Button onClick={() => setShowCreateForm(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            Nuevo Envío
+          </Button>
+        )}
       </div>
 
+      <EnvioForm open={showCreateForm} onOpenChange={setShowCreateForm} />
       <EnvioDetailDialog 
         open={!!selectedEnvioId} 
         onOpenChange={(open) => !open && setSelectedEnvioId(null)} 
