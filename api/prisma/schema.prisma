@@ -17,10 +17,11 @@ enum Role {
 
 enum EstadoOrden {
   recibida
-  en_proceso
-  enviada
-  finalizada
-  cancelada
+  procesando
+  pendiente_ajustes
+  procesada
+  anulada
+  en_despacho
 }
 
 enum EstadoEnvio {
