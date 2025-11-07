@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { ocApi } from '@/lib/api';
+import { useAuthStore } from '@/store/authStore';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -12,6 +13,7 @@ import { OrdenCompraForm } from '@/components/OrdenCompraForm';
 import { OCDetailDialog } from '@/components/OCDetailDialog';
 
 export default function OrdenesCompraPage() {
+  const user = useAuthStore((state) => state.user);
   const [search, setSearch] = useState('');
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [selectedOcId, setSelectedOcId] = useState<number | null>(null);
@@ -33,16 +35,18 @@ export default function OrdenesCompraPage() {
             Crea, visualice y gestione todas las órdenes de compra.
           </p>
         </div>
-        <div className="flex gap-3">
-          <Button variant="outline">
-            <Upload className="h-4 w-4 mr-2" />
-            Subir Archivo
-          </Button>
-          <Button onClick={() => setShowCreateForm(true)}>
-            <Plus className="h-4 w-4 mr-2" />
-            Nueva Orden
-          </Button>
-        </div>
+        {user?.role === 'admin' && (
+          <div className="flex gap-3">
+            <Button variant="outline">
+              <Upload className="h-4 w-4 mr-2" />
+              Subir Archivo
+            </Button>
+            <Button onClick={() => setShowCreateForm(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Nueva Orden
+            </Button>
+          </div>
+        )}
       </div>
 
       <OrdenCompraForm open={showCreateForm} onOpenChange={setShowCreateForm} />

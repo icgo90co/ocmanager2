@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { ovApi } from '@/lib/api';
+import { useAuthStore } from '@/store/authStore';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -12,6 +13,7 @@ import { OrdenVentaForm } from '@/components/OrdenVentaForm';
 import { OVDetailDialog } from '@/components/OVDetailDialog';
 
 export default function OrdenesVentaPage() {
+  const user = useAuthStore((state) => state.user);
   const [search, setSearch] = useState('');
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [selectedOvId, setSelectedOvId] = useState<number | null>(null);
@@ -33,10 +35,12 @@ export default function OrdenesVentaPage() {
             Crea y gestiona órdenes de venta.
           </p>
         </div>
-        <Button onClick={() => setShowCreateForm(true)}>
-          <Plus className="h-4 w-4 mr-2" />
-          Nueva OV
-        </Button>
+        {user?.role === 'admin' && (
+          <Button onClick={() => setShowCreateForm(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            Nueva OV
+          </Button>
+        )}
       </div>
 
       <OrdenVentaForm open={showCreateForm} onOpenChange={setShowCreateForm} />

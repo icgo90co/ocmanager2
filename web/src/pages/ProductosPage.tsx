@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { productosApi } from '@/lib/api';
+import { useAuthStore } from '@/store/authStore';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -11,6 +12,7 @@ import { Plus, Edit } from 'lucide-react';
 import { ProductoForm } from '@/components/ProductoForm';
 
 export default function ProductosPage() {
+  const user = useAuthStore((state) => state.user);
   const [search, setSearch] = useState('');
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingProducto, setEditingProducto] = useState<any>(null);
@@ -32,10 +34,12 @@ export default function ProductosPage() {
             Crea y gestiona el catálogo de productos.
           </p>
         </div>
-        <Button onClick={() => setShowCreateForm(true)}>
-          <Plus className="h-4 w-4 mr-2" />
-          Nuevo Producto
-        </Button>
+        {user?.role === 'admin' && (
+          <Button onClick={() => setShowCreateForm(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            Nuevo Producto
+          </Button>
+        )}
       </div>
 
       <ProductoForm 
@@ -91,13 +95,15 @@ export default function ProductosPage() {
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      <Button 
-                        variant="ghost" 
-                        size="icon"
-                        onClick={() => setEditingProducto(producto)}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
+                      {user?.role === 'admin' && (
+                        <Button 
+                          variant="ghost" 
+                          size="icon"
+                          onClick={() => setEditingProducto(producto)}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                      )}
                     </TableCell>
                   </TableRow>
                 ))}
