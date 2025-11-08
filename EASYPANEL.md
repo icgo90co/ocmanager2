@@ -12,6 +12,12 @@ DATABASE_URL=mysql://camilo:Indiana%40%4090081010@labsacme.com:9858/gold
 JWT_SECRET=tu-secreto-jwt-aqui
 CORS_ORIGIN=https://flow.labsacme.com
 API_PORT=3001
+GEMINI_API_KEY=AIzaSyC--qVr8uc7OmQibgXFRFIF7mpBmhIwq3I
+```
+
+**NOTA IMPORTANTE**: La variable `GEMINI_API_KEY` es necesaria para la funcionalidad de procesamiento de documentos con IA. Si no está configurada, verás el error:
+```
+Gemini AI no está configurado - falta GEMINI_API_KEY
 ```
 
 ### Para el servicio Web
