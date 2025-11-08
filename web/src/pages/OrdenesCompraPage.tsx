@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { formatCurrency, formatDate } from '@/lib/utils';
-import { Plus, Upload, Eye, Sparkles } from 'lucide-react';
+import { Plus, Eye, Sparkles } from 'lucide-react';
 import { OrdenCompraForm } from '@/components/OrdenCompraForm';
 import { OrdenCompraUploadIA } from '@/components/OrdenCompraUploadIA';
 import { OCDetailDialog } from '@/components/OCDetailDialog';
