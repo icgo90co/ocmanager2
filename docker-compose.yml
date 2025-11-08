@@ -35,6 +35,7 @@ services:
       - JWT_SECRET=${JWT_SECRET:-default-secret-change-me}
       - CORS_ORIGIN=https://flow.labsacme.com
       - API_PORT=3001
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
     volumes:
       - uploads:/app/uploads
     # depends_on:

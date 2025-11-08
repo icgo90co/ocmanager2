@@ -16,6 +16,9 @@ dotenv.config({ path: path.join(__dirname, '..', '..', '.env') });
 const app = express();
 const PORT = process.env.API_PORT || 3001;
 
+// Trust proxy - MUST be set when behind reverse proxy (Traefik, nginx, etc)
+app.set('trust proxy', 1);
+
 // CORS configuration - MUST be before other middleware
 const allowedOrigin = process.env.CORS_ORIGIN || 'http://localhost:5173';
 logger.info(`🔐 CORS configured for origin: ${allowedOrigin}`);
