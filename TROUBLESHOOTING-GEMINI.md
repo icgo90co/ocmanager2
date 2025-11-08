@@ -66,11 +66,17 @@ En la [Consola de Google Cloud](https://console.cloud.google.com/apis/credential
 Si el problema persiste, edita `/api/src/services/gemini.service.ts`:
 
 ```typescript
-// Cambiar de:
-this.model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+// El modelo actual (actualizado Noviembre 2024):
+this.model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash-preview-05-20' });
 
-// A:
-this.model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+// Alternativas si no funciona:
+// this.model = genAI.getGenerativeModel({ model: 'gemini-2.5-pro-preview-03-25' });
+// this.model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+```
+
+**Nota**: Los modelos de Gemini cambian frecuentemente. Verifica los modelos disponibles en:
+```bash
+curl "https://generativelanguage.googleapis.com/v1beta/models?key=TU_API_KEY"
 ```
 
 #### 5. Verificar Cuotas y Límites

@@ -113,7 +113,7 @@ Adicional al flujo de usuario:
 
 ## Tecnologías Utilizadas
 
-- **Google Gemini 1.5 Flash**: Modelo de IA multimodal (texto + imágenes)
+- **Google Gemini 2.5 Flash Preview**: Modelo de IA multimodal (texto + imágenes)
 - **pdf-parse**: Extracción de texto de PDFs
 - **React Query**: Gestión de estado asíncrono en frontend
 - **Zod**: Validación de esquemas de datos
