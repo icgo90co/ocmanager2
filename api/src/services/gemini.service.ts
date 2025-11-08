@@ -42,27 +42,19 @@ interface ExtractedOCData {
 
 export class GeminiService {
   private model: any = null;
-  private initialized = false;
 
   private initialize() {
-    if (this.initialized) return;
-    
-    if (!process.env.GEMINI_API_KEY) {
-      logger.error('GEMINI_API_KEY no está configurada');
-      throw new Error('GEMINI_API_KEY no está configurada en las variables de entorno');
+    if (!this.model) {
+      const genAI = getGenAI();
+      this.model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash-preview-05-20' });
     }
-    
-    const ai = getGenAI();
-    this.model = ai.getGenerativeModel({ model: 'gemini-2.5-flash-preview-05-20' });
-    this.initialized = true;
-    logger.info('Servicio de Gemini AI inicializado correctamente con modelo gemini-2.5-flash');
   }
 
   /**
    * Procesa un archivo (PDF o imagen) y extrae información de la orden de compra
    */
   async procesarOrdenCompra(filePath: string, mimeType: string): Promise<ExtractedOCData> {
-    this.initialize(); // Inicializar solo cuando se necesite
+    this.initialize(); // Inicializar solo cuando se use
     
     try {
       logger.info(`Procesando archivo con Gemini AI: ${filePath}, tipo: ${mimeType}`);
@@ -221,7 +213,7 @@ IMPORTANTE:
    * Mejora la descripción de un producto usando IA
    */
   async mejorarDescripcionProducto(descripcionActual: string): Promise<string> {
-    this.initialize();
+    this.initialize(); // Inicializar solo cuando se use
     
     try {
       const prompt = `
@@ -245,7 +237,7 @@ Responde solo con la descripción mejorada, sin explicaciones adicionales.
    * Sugiere un SKU basado en la descripción del producto
    */
   async sugerirSKU(descripcion: string): Promise<string> {
-    this.initialize();
+    this.initialize(); // Inicializar solo cuando se use
     
     try {
       const prompt = `

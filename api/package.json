@@ -14,7 +14,8 @@
     "prisma:generate": "prisma generate",
     "test": "jest",
     "test:watch": "jest --watch",
-    "test:gemini": "tsx scripts/test-gemini.ts"
+    "test:gemini": "tsx scripts/test-gemini.ts",
+    "test:gemini:simple": "tsx scripts/test-gemini-simple.ts"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
