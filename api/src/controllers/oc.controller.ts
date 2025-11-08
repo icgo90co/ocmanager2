@@ -6,6 +6,8 @@ import { AuthRequest } from '../middleware/auth';
 import { ApiError } from '../middleware/errorHandler';
 import prisma from '../utils/prisma';
 import { Decimal } from '@prisma/client/runtime/library';
+import geminiService from '../services/gemini.service';
+import { logger } from '../utils/logger';
 
 const VALID_TRANSITIONS: Record<string, string[]> = {
   recibida: ['procesando', 'anulada'],
@@ -143,7 +145,7 @@ export const uploadFile = async (req: AuthRequest, res: Response, next: NextFunc
       throw new ApiError(400, 'No se proporcionó ningún archivo');
     }
 
-    const { clienteId } = req.body;
+    const { clienteId, useAI } = req.body;
 
     // Verificar permisos
     if (req.user?.role === 'cliente' && parseInt(clienteId) !== req.user.clienteId) {
@@ -161,7 +163,81 @@ export const uploadFile = async (req: AuthRequest, res: Response, next: NextFunc
       },
     });
 
-    // Parsear archivo
+    // Si se solicita procesamiento con IA
+    if (useAI === 'true' || useAI === true) {
+      logger.info('Procesando archivo con IA Gemini...');
+      
+      try {
+        const extractedData = await geminiService.procesarOrdenCompra(
+          req.file.path,
+          req.file.mimetype
+        );
+
+        // Buscar o sugerir cliente
+        let clienteIdFound = clienteId ? parseInt(clienteId) : null;
+        
+        if (!clienteIdFound && extractedData.cliente?.nit) {
+          const clienteExistente = await prisma.cliente.findFirst({
+            where: { nit: extractedData.cliente.nit },
+          });
+          clienteIdFound = clienteExistente?.id || null;
+        }
+
+        // Procesar productos y buscar coincidencias
+        const productosData = await Promise.all(
+          extractedData.productos.map(async (item) => {
+            let productoId = null;
+            
+            // Buscar producto por SKU si existe
+            if (item.sku) {
+              const producto = await prisma.producto.findUnique({
+                where: { sku: item.sku },
+              });
+              productoId = producto?.id || null;
+            }
+
+            // Si no se encontró producto, sugerir SKU con IA
+            if (!productoId && !item.sku) {
+              item.sku = await geminiService.sugerirSKU(item.descripcion);
+            }
+
+            return {
+              productoId,
+              sku: item.sku || 'TEMP-' + Date.now(),
+              descripcion: item.descripcion,
+              cantidad: item.cantidad,
+              precioUnitario: item.precioUnitario,
+              subtotal: item.subtotal,
+            };
+          })
+        );
+
+        return res.json({
+          success: true,
+          data: {
+            archivoId: archivo.id,
+            aiProcessed: true,
+            extractedData: {
+              numeroOrden: extractedData.numeroOrden,
+              clienteId: clienteIdFound,
+              clienteData: extractedData.cliente,
+              productos: productosData,
+              subtotal: extractedData.subtotal,
+              impuestos: extractedData.impuestos,
+              total: extractedData.total,
+              moneda: extractedData.moneda || 'COP',
+              fecha: extractedData.fecha,
+              observaciones: extractedData.observaciones,
+            },
+          },
+        });
+      } catch (aiError) {
+        logger.error({ error: aiError }, 'Error en procesamiento con IA, usando método tradicional');
+        // Si falla la IA, continuar con método tradicional
+      }
+    }
+
+    // Método tradicional: parsear archivo Excel/CSV
     const workbook = XLSX.readFile(req.file.path);
     const sheetName = workbook.SheetNames[0];
     const sheet = workbook.Sheets[sheetName];
@@ -170,10 +246,11 @@ export const uploadFile = async (req: AuthRequest, res: Response, next: NextFunc
     // Detectar columnas
     const headers = data.length > 0 ? Object.keys(data[0] as Record<string, unknown>) : [];
 
-    res.json({
+    return res.json({
       success: true,
       data: {
         archivoId: archivo.id,
+        aiProcessed: false,
         headers,
         preview: data.slice(0, 5),
         totalRows: data.length,
@@ -184,69 +261,135 @@ export const uploadFile = async (req: AuthRequest, res: Response, next: NextFunc
     if (req.file) {
       await fs.unlink(req.file.path).catch(() => {});
     }
-    next(error);
+    return next(error);
   }
 };
 
 export const confirmUpload = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
-    const { archivoId, columnMapping, clienteId, moneda = 'COP', notas } = req.body;
+    const { 
+      archivoId, 
+      columnMapping, 
+      clienteId, 
+      moneda = 'COP', 
+      notas,
+      aiProcessed,
+      extractedData 
+    } = req.body;
 
-    // Leer archivo nuevamente
-    const archivo = await prisma.archivo.findUnique({ where: { id: archivoId } });
-    if (!archivo) {
-      throw new ApiError(404, 'Archivo no encontrado');
-    }
-
-    const workbook = XLSX.readFile(archivo.ruta);
-    const sheetName = workbook.SheetNames[0];
-    const sheet = workbook.Sheets[sheetName];
-    const data: any[] = XLSX.utils.sheet_to_json(sheet);
-
-    // Mapear columnas y validar
-    const items: any[] = [];
+    let items: any[] = [];
     let total = new Decimal(0);
 
-    for (const row of data) {
-      const sku = row[columnMapping.sku];
-      const cantidad = parseFloat(row[columnMapping.cantidad]);
-      const precioUnitario = parseFloat(row[columnMapping.precioUnitario]);
-      const descripcion = row[columnMapping.descripcion] || '';
+    // Si fue procesado con IA, usar los datos extraídos
+    if (aiProcessed && extractedData) {
+      logger.info('Confirmando orden procesada con IA');
 
-      if (!sku || !cantidad || cantidad <= 0 || precioUnitario < 0) {
-        continue; // Skip invalid rows
+      // Validar y procesar productos extraídos por IA
+      for (const item of extractedData.productos) {
+        const cantidad = parseFloat(item.cantidad);
+        const precioUnitario = parseFloat(item.precioUnitario);
+
+        if (!cantidad || cantidad <= 0 || precioUnitario < 0) {
+          continue;
+        }
+
+        // Si se proporcionó productoId, verificar que existe
+        let productoId = item.productoId;
+        if (productoId) {
+          const producto = await prisma.producto.findUnique({ 
+            where: { id: productoId } 
+          });
+          if (!producto) {
+            productoId = null;
+          }
+        }
+
+        // Si no hay producto pero hay SKU, intentar buscar
+        if (!productoId && item.sku) {
+          const producto = await prisma.producto.findUnique({ 
+            where: { sku: item.sku } 
+          });
+          productoId = producto?.id || null;
+        }
+
+        const subtotal = new Decimal(cantidad).mul(new Decimal(precioUnitario));
+        total = total.add(subtotal);
+
+        items.push({
+          productoId,
+          sku: item.sku,
+          descripcion: item.descripcion,
+          cantidad,
+          precioUnitario,
+          subtotal: subtotal.toNumber(),
+        });
       }
 
-      // Buscar producto
-      const producto = await prisma.producto.findUnique({ where: { sku } });
+      // Usar total extraído por IA si está disponible
+      if (extractedData.total) {
+        total = new Decimal(extractedData.total);
+      }
+    } else {
+      // Método tradicional: leer archivo y mapear columnas
+      const archivo = await prisma.archivo.findUnique({ where: { id: archivoId } });
+      if (!archivo) {
+        throw new ApiError(404, 'Archivo no encontrado');
+      }
 
-      const subtotal = new Decimal(cantidad).mul(new Decimal(precioUnitario));
-      total = total.add(subtotal);
+      const workbook = XLSX.readFile(archivo.ruta);
+      const sheetName = workbook.SheetNames[0];
+      const sheet = workbook.Sheets[sheetName];
+      const data: any[] = XLSX.utils.sheet_to_json(sheet);
 
-      items.push({
-        productoId: producto?.id,
-        sku,
-        descripcion: descripcion || producto?.nombre || sku,
-        cantidad,
-        precioUnitario,
-        subtotal: subtotal.toNumber(),
-      });
+      // Mapear columnas y validar
+      for (const row of data) {
+        const sku = row[columnMapping.sku];
+        const cantidad = parseFloat(row[columnMapping.cantidad]);
+        const precioUnitario = parseFloat(row[columnMapping.precioUnitario]);
+        const descripcion = row[columnMapping.descripcion] || '';
+
+        if (!sku || !cantidad || cantidad <= 0 || precioUnitario < 0) {
+          continue;
+        }
+
+        // Buscar producto
+        const producto = await prisma.producto.findUnique({ where: { sku } });
+
+        const subtotal = new Decimal(cantidad).mul(new Decimal(precioUnitario));
+        total = total.add(subtotal);
+
+        items.push({
+          productoId: producto?.id,
+          sku,
+          descripcion: descripcion || producto?.nombre || sku,
+          cantidad,
+          precioUnitario,
+          subtotal: subtotal.toNumber(),
+        });
+      }
     }
 
-    // Generar código OC
-    const count = await prisma.ordenCompra.count();
-    const codigoOc = `OC-${new Date().getFullYear()}-${String(count + 1).padStart(5, '0')}`;
+    if (items.length === 0) {
+      throw new ApiError(400, 'No se encontraron productos válidos en el archivo');
+    }
+
+    // Generar código OC (usar el extraído por IA si existe)
+    let codigoOc = extractedData?.numeroOrden;
+    if (!codigoOc) {
+      const count = await prisma.ordenCompra.count();
+      codigoOc = `OC-${new Date().getFullYear()}-${String(count + 1).padStart(5, '0')}`;
+    }
 
     // Crear orden
     const orden = await prisma.ordenCompra.create({
       data: {
         codigoOc,
-        clienteId,
+        clienteId: clienteId || extractedData?.clienteId,
         total: total.toNumber(),
-        moneda,
-        notas,
-        origen: 'archivo',
+        moneda: extractedData?.moneda || moneda,
+        notas: extractedData?.observaciones || notas,
+        origen: aiProcessed ? 'ai' : 'archivo',
         archivoId,
         items: { create: items },
       },
@@ -259,7 +402,7 @@ export const confirmUpload = async (req: AuthRequest, res: Response, next: NextF
         userId: req.user!.id,
         entidad: 'OrdenCompra',
         entidadId: orden.id,
-        accion: 'CREATE_FROM_FILE',
+        accion: aiProcessed ? 'CREATE_FROM_AI' : 'CREATE_FROM_FILE',
         ip: req.ip,
         userAgent: req.headers['user-agent'],
       },

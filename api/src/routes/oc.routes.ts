@@ -23,11 +23,15 @@ const upload = multer({
       'text/csv',
       'application/vnd.ms-excel',
       'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'application/pdf',
+      'image/jpeg',
+      'image/jpg',
+      'image/png',
     ];
     if (allowedTypes.includes(file.mimetype)) {
       cb(null, true);
     } else {
-      cb(new Error('Tipo de archivo no permitido. Solo CSV y XLSX'));
+      cb(new Error('Tipo de archivo no permitido. Solo CSV, XLSX, PDF e imágenes'));
     }
   },
 });
@@ -40,7 +44,7 @@ router.get('/', ocController.getAll);
 router.get('/:id', ocController.getById);
 router.post('/', ocController.create);
 router.post('/upload', uploadLimiter, upload.single('file'), ocController.uploadFile);
-router.post('/:id/confirm', ocController.confirmUpload);
+router.post('/confirm', ocController.confirmUpload);
 router.patch('/:id', ocController.update);
 router.post('/:id/cambiar-estado', ocController.changeEstado);
 

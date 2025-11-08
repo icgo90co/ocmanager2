@@ -8,14 +8,16 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { formatCurrency, formatDate } from '@/lib/utils';
-import { Plus, Upload, Eye } from 'lucide-react';
+import { Plus, Upload, Eye, Sparkles } from 'lucide-react';
 import { OrdenCompraForm } from '@/components/OrdenCompraForm';
+import { OrdenCompraUploadIA } from '@/components/OrdenCompraUploadIA';
 import { OCDetailDialog } from '@/components/OCDetailDialog';
 
 export default function OrdenesCompraPage() {
   const user = useAuthStore((state) => state.user);
   const [search, setSearch] = useState('');
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [showUploadIA, setShowUploadIA] = useState(false);
   const [selectedOcId, setSelectedOcId] = useState<number | null>(null);
 
   const { data: ordenes, isLoading } = useQuery({
@@ -38,9 +40,13 @@ export default function OrdenesCompraPage() {
           </p>
         </div>
         <div className="flex gap-3">
-          <Button variant="outline">
-            <Upload className="h-4 w-4 mr-2" />
-            Subir Archivo
+          <Button 
+            variant="outline"
+            onClick={() => setShowUploadIA(true)}
+            className="bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200 hover:border-blue-300"
+          >
+            <Sparkles className="h-4 w-4 mr-2 text-blue-600" />
+            Subir con IA
           </Button>
           {user?.role === 'admin' && (
             <Button onClick={() => setShowCreateForm(true)}>
@@ -115,6 +121,17 @@ export default function OrdenesCompraPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Modales */}
+      <OrdenCompraForm open={showCreateForm} onOpenChange={setShowCreateForm} />
+      <OrdenCompraUploadIA open={showUploadIA} onOpenChange={setShowUploadIA} />
+      {selectedOcId && (
+        <OCDetailDialog
+          ocId={selectedOcId}
+          open={!!selectedOcId}
+          onOpenChange={(open) => !open && setSelectedOcId(null)}
+        />
+      )}
     </div>
   );
 }

@@ -36,6 +36,7 @@ enum OrigenOrden {
   archivo
   manual
   api
+  ai
 }
 
 model User {

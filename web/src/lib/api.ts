@@ -69,7 +69,7 @@ export const ocApi = {
   uploadFile: (formData: FormData) => api.post('/oc/upload', formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
   }),
-  confirmUpload: (id: number, data: any) => api.post(`/oc/${id}/confirm`, data),
+  confirmUpload: (data: any) => api.post('/oc/confirm', data),
   update: (id: number, data: any) => api.patch(`/oc/${id}`, data),
   changeEstado: (id: number, estado: string) =>
     api.post(`/oc/${id}/cambiar-estado`, { estado }),

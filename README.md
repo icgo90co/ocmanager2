@@ -1,10 +1,11 @@
 # OrderFlow - Sistema de Gestión de Órdenes y Envíos
 
-Sistema completo de gestión de órdenes de compra, órdenes de venta y seguimiento de envíos con panel de administración y cliente.
+Sistema completo de gestión de órdenes de compra, órdenes de venta y seguimiento de envíos con panel de administración y cliente. **Ahora con procesamiento inteligente usando IA Gemini** ✨
 
 ## 🚀 Características Principales
 
-- **Gestión de Órdenes de Compra (OC)**: Creación manual o mediante carga de archivos CSV/XLSX con mapeo inteligente de columnas
+- **🤖 Procesamiento con IA Gemini**: Sube documentos (PDF, imágenes, Excel, CSV) y la IA extrae automáticamente toda la información de la orden
+- **Gestión de Órdenes de Compra (OC)**: Creación manual, carga de archivos o procesamiento con IA
 - **Gestión de Órdenes de Venta (OV)**: Generación automática desde OC o creación manual
 - **Seguimiento de Envíos**: Trazabilidad manual de eventos con timeline visual
 - **Panel de Administración**: Dashboard con KPIs, control total y sistema de auditoría
@@ -12,7 +13,7 @@ Sistema completo de gestión de órdenes de compra, órdenes de venta y seguimie
 
 ## 🏗️ Stack Tecnológico
 
-**Backend**: Node.js 20 + TypeScript + Express + Prisma + MariaDB/MySQL + JWT + Zod + Pino  
+**Backend**: Node.js 20 + TypeScript + Express + Prisma + MariaDB/MySQL + JWT + Zod + Pino + **Google Gemini AI**  
 **Frontend**: React 18 + TypeScript + Vite + Tailwind CSS + shadcn/ui + Zustand + React Query  
 **Infraestructura**: Docker + Docker Compose
 
@@ -25,6 +26,8 @@ cd ocmanager2
 
 # 2. Configurar variables de entorno
 cp .env.example .env
+# Editar .env y agregar tu token de Gemini AI:
+# GEMINI_API_KEY="tu-api-key-aqui"
 
 # 3. Iniciar con Docker
 docker compose up -d
@@ -41,6 +44,36 @@ npm run seed
 
 **Admin**: admin@ocmanager.com / admin123  
 **Cliente**: cliente@acme.com / cliente123
+
+## 🤖 Nueva Funcionalidad: Upload con IA
+
+### ¿Qué hace?
+
+Sube cualquier documento de orden de compra (PDF, imagen, Excel, CSV) y la **IA Gemini** extrae automáticamente:
+
+- Número de orden
+- Información del cliente (nombre, NIT, email, teléfono, dirección)
+- Todos los productos con SKU, descripción, cantidad y precio
+- Subtotales, impuestos y total
+- Fecha y observaciones
+
+### ¿Cómo usarlo?
+
+1. Ve a **Órdenes de Compra**
+2. Clic en **"Subir con IA"** (botón con ícono ✨)
+3. Selecciona tu documento
+4. Espera 5-15 segundos mientras la IA procesa
+5. Revisa y edita los datos extraídos si es necesario
+6. Confirma y crea la orden
+
+### Ventajas
+
+✅ **Ahorro de tiempo**: De 10 minutos a 30 segundos  
+✅ **Menos errores**: Sin transcripción manual  
+✅ **Múltiples formatos**: PDF, JPG, PNG, Excel, CSV  
+✅ **Edición flexible**: Control total antes de guardar  
+
+📖 Ver documentación completa en [GEMINI-AI-FEATURE.md](./GEMINI-AI-FEATURE.md)
 
 ## 📚 Uso
 
