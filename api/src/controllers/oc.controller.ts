@@ -167,6 +167,15 @@ export const uploadFile = async (req: AuthRequest, res: Response, next: NextFunc
     if (useAI === 'true' || useAI === true) {
       logger.info('Procesando archivo con IA Gemini...');
       
+      // Verificar que Gemini esté configurado
+      if (!geminiService.isConfigured()) {
+        logger.error('Gemini AI no está configurado - falta GEMINI_API_KEY');
+        return res.status(400).json({
+          success: false,
+          error: 'El servicio de IA no está configurado. Contacta al administrador.',
+        });
+      }
+      
       try {
         const extractedData = await geminiService.procesarOrdenCompra(
           req.file.path,
@@ -232,8 +241,24 @@ export const uploadFile = async (req: AuthRequest, res: Response, next: NextFunc
           },
         });
       } catch (aiError) {
-        logger.error({ error: aiError }, 'Error en procesamiento con IA, usando método tradicional');
-        // Si falla la IA, continuar con método tradicional
+        const errorMessage = aiError instanceof Error ? aiError.message : String(aiError);
+        const errorStack = aiError instanceof Error ? aiError.stack : undefined;
+        
+        logger.error({ 
+          errorMessage,
+          errorStack,
+          errorName: aiError instanceof Error ? aiError.name : 'Unknown',
+          filePath: req.file.path,
+          mimeType: req.file.mimetype,
+          fileSize: req.file.size
+        }, 'Error procesando con IA Gemini');
+        
+        // Retornar error específico al frontend
+        return res.status(400).json({
+          success: false,
+          error: errorMessage,
+          message: 'No se pudo procesar el archivo con IA. ' + errorMessage,
+        });
       }
     }
 

@@ -45,16 +45,37 @@ export class GeminiService {
 
   private initialize() {
     if (!this.model) {
-      const genAI = getGenAI();
-      this.model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash-preview-05-20' });
+      try {
+        logger.info('Inicializando Gemini AI...');
+        const genAI = getGenAI();
+        this.model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash-preview-05-20' });
+        logger.info('Servicio de Gemini AI inicializado correctamente con modelo gemini-2.5-flash');
+      } catch (error) {
+        logger.error({ error }, 'Error al inicializar Gemini AI');
+        throw error;
+      }
     }
+  }
+
+  /**
+   * Verifica si el servicio está configurado correctamente
+   */
+  isConfigured(): boolean {
+    return !!process.env.GEMINI_API_KEY;
   }
 
   /**
    * Procesa un archivo (PDF o imagen) y extrae información de la orden de compra
    */
   async procesarOrdenCompra(filePath: string, mimeType: string): Promise<ExtractedOCData> {
-    this.initialize(); // Inicializar solo cuando se use
+    logger.info({
+      filePath,
+      mimeType,
+      hasApiKey: !!process.env.GEMINI_API_KEY,
+      apiKeyLength: process.env.GEMINI_API_KEY?.length || 0
+    }, 'Iniciando procesamiento con Gemini AI');
+    
+    this.initialize();
     
     try {
       logger.info(`Procesando archivo con Gemini AI: ${filePath}, tipo: ${mimeType}`);
