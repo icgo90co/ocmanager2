@@ -43,18 +43,14 @@ interface ExtractedOCData {
 export class GeminiService {
   private model: any = null;
 
-  private initialize() {
-    if (!this.model) {
-      try {
-        logger.info('Inicializando Gemini AI...');
-        const genAI = getGenAI();
-        this.model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash-preview-05-20' });
-        logger.info('Servicio de Gemini AI inicializado correctamente con modelo gemini-2.5-flash');
-      } catch (error) {
-        logger.error({ error }, 'Error al inicializar Gemini AI');
-        throw error;
-      }
-    }
+  private async initialize() {
+    if (this.model) return; // Ya inicializado
+    
+    const ai = getGenAI();
+    // Usar el modelo que funciona con la API key actual: gemini-2.5-flash-preview-05-20
+    this.model = ai.getGenerativeModel({ model: 'gemini-2.5-flash-preview-05-20' });
+    
+    logger.info('GeminiService inicializado correctamente con gemini-2.5-flash-preview-05-20');
   }
 
   /**
@@ -154,9 +150,20 @@ IMPORTANTE:
 
       // Llamar a Gemini AI
       logger.info('Llamando a la API de Gemini...');
-      const result = await this.model.generateContent([prompt, imagePart]);
-      const response = await result.response;
-      const text = response.text();
+      
+      let result, response, text;
+      try {
+        result = await this.model.generateContent([prompt, imagePart]);
+        response = await result.response;
+        text = response.text();
+      } catch (fetchError: any) {
+        // Errores de red o conectividad
+        if (fetchError.message && fetchError.message.includes('fetch failed')) {
+          logger.error({ error: fetchError }, 'Error de red al conectar con Gemini API');
+          throw new Error('No se pudo conectar con el servicio de IA. Verifica la conexión a internet del servidor.');
+        }
+        throw fetchError;
+      }
 
       logger.info(`Respuesta de Gemini AI recibida (${text.length} caracteres)`);
       logger.debug(`Respuesta completa: ${text.substring(0, 500)}...`);
