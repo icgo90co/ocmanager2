@@ -3,8 +3,18 @@ import fs from 'fs';
 const pdfParse = require('pdf-parse');
 import { logger } from '../utils/logger';
 
-// Inicializar Gemini AI
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
+// Inicializar Gemini AI solo cuando se use
+let genAI: GoogleGenerativeAI | null = null;
+
+const getGenAI = () => {
+  if (!genAI) {
+    if (!process.env.GEMINI_API_KEY) {
+      throw new Error('GEMINI_API_KEY no está configurada en las variables de entorno');
+    }
+    genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+  }
+  return genAI;
+};
 
 interface ExtractedOCData {
   numeroOrden?: string;
@@ -31,15 +41,20 @@ interface ExtractedOCData {
 }
 
 export class GeminiService {
-  private model;
+  private model: any = null;
+  private initialized = false;
 
-  constructor() {
+  private initialize() {
+    if (this.initialized) return;
+    
     if (!process.env.GEMINI_API_KEY) {
       logger.error('GEMINI_API_KEY no está configurada');
       throw new Error('GEMINI_API_KEY no está configurada en las variables de entorno');
     }
-    // Usar gemini-2.5-flash-preview que es el modelo disponible más rápido y económico
-    this.model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash-preview-05-20' });
+    
+    const ai = getGenAI();
+    this.model = ai.getGenerativeModel({ model: 'gemini-2.5-flash-preview-05-20' });
+    this.initialized = true;
     logger.info('Servicio de Gemini AI inicializado correctamente con modelo gemini-2.5-flash');
   }
 
@@ -47,6 +62,8 @@ export class GeminiService {
    * Procesa un archivo (PDF o imagen) y extrae información de la orden de compra
    */
   async procesarOrdenCompra(filePath: string, mimeType: string): Promise<ExtractedOCData> {
+    this.initialize(); // Inicializar solo cuando se necesite
+    
     try {
       logger.info(`Procesando archivo con Gemini AI: ${filePath}, tipo: ${mimeType}`);
 
@@ -204,6 +221,8 @@ IMPORTANTE:
    * Mejora la descripción de un producto usando IA
    */
   async mejorarDescripcionProducto(descripcionActual: string): Promise<string> {
+    this.initialize();
+    
     try {
       const prompt = `
 Mejora la siguiente descripción de producto haciéndola más clara y profesional, pero mantén la información técnica:
@@ -226,6 +245,8 @@ Responde solo con la descripción mejorada, sin explicaciones adicionales.
    * Sugiere un SKU basado en la descripción del producto
    */
   async sugerirSKU(descripcion: string): Promise<string> {
+    this.initialize();
+    
     try {
       const prompt = `
 Genera un SKU corto y descriptivo (máximo 20 caracteres) para este producto:
