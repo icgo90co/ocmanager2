@@ -84,6 +84,17 @@ export const ovApi = {
   update: (id: number, data: any) => api.patch(`/ov/${id}`, data),
   changeEstado: (id: number, estado: string) =>
     api.post(`/ov/${id}/cambiar-estado`, { estado }),
+  downloadPDF: async (id: number, codigoOv: string) => {
+    const response = await api.get(`/ov/${id}/pdf`, { responseType: 'blob' });
+    const url = window.URL.createObjectURL(new Blob([response.data]));
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `${codigoOv}.pdf`);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.URL.revokeObjectURL(url);
+  },
 };
 
 // Envíos API

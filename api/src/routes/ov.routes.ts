@@ -7,6 +7,7 @@ const router = Router();
 router.use(authenticate);
 
 router.get('/', ovController.getAll);
+router.get('/:id/pdf', ovController.generatePDF);
 router.get('/:id', ovController.getById);
 router.post('/', isAdmin, ovController.create);
 router.post('/desde-oc/:ocId', isAdmin, ovController.createFromOC);

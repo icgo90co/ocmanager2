@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { formatCurrency, formatDate } from '@/lib/utils';
-import { FileText, Truck } from 'lucide-react';
+import { FileText, Truck, FileDown } from 'lucide-react';
 
 interface OVDetailDialogProps {
   open: boolean;
@@ -83,15 +83,34 @@ export function OVDetailDialog({ open, onOpenChange, ovId }: OVDetailDialogProps
     crearEnvioMutation.mutate(data);
   };
 
+  const handleDownloadPDF = async () => {
+    try {
+      await ovApi.downloadPDF(ovId, ov?.codigoOv || `OV-${ovId}`);
+    } catch (error: any) {
+      alert(error.response?.data?.message || 'Error al descargar el PDF');
+    }
+  };
+
   if (!open) return null;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-6xl max-h-[95vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <FileText className="h-5 w-5" />
-            Detalle de Orden de Venta
+          <DialogTitle className="flex items-center gap-2 justify-between">
+            <div className="flex items-center gap-2">
+              <FileText className="h-5 w-5" />
+              Detalle de Orden de Venta
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleDownloadPDF}
+              className="flex items-center gap-2"
+            >
+              <FileDown className="h-4 w-4" />
+              Descargar PDF
+            </Button>
           </DialogTitle>
         </DialogHeader>
 

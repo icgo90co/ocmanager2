@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { formatCurrency, formatDate } from '@/lib/utils';
-import { Plus, Eye } from 'lucide-react';
+import { Plus, Eye, FileDown } from 'lucide-react';
 import { OrdenVentaForm } from '@/components/OrdenVentaForm';
 import { OVDetailDialog } from '@/components/OVDetailDialog';
 
@@ -25,6 +25,14 @@ export default function OrdenesVentaPage() {
       return res.data.data;
     },
   });
+
+  const handleDownloadPDF = async (id: number, codigoOv: string) => {
+    try {
+      await ovApi.downloadPDF(id, codigoOv);
+    } catch (error: any) {
+      alert(error.response?.data?.message || 'Error al descargar el PDF');
+    }
+  };
 
   return (
     <div className="p-8">
@@ -90,13 +98,24 @@ export default function OrdenesVentaPage() {
                     </TableCell>
                     <TableCell>{formatCurrency(orden.total)}</TableCell>
                     <TableCell>
-                      <Button 
-                        variant="ghost" 
-                        size="icon"
-                        onClick={() => setSelectedOvId(orden.id)}
-                      >
-                        <Eye className="h-4 w-4" />
-                      </Button>
+                      <div className="flex items-center gap-2">
+                        <Button 
+                          variant="ghost" 
+                          size="icon"
+                          onClick={() => setSelectedOvId(orden.id)}
+                          title="Ver detalles"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="icon"
+                          onClick={() => handleDownloadPDF(orden.id, orden.codigoOv)}
+                          title="Descargar PDF"
+                        >
+                          <FileDown className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
