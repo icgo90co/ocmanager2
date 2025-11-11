@@ -7,6 +7,7 @@ import ovRoutes from './ov.routes';
 import envioRoutes from './envio.routes';
 import archivoRoutes from './archivo.routes';
 import auditRoutes from './audit.routes';
+import userRoutes from './user.routes';
 import { apiLimiter } from '../middleware/rateLimiter';
 import { runSeed } from '../controllers/seed.controller';
 
@@ -18,6 +19,7 @@ router.use(apiLimiter);
 router.post('/admin/seed', runSeed);
 
 router.use('/auth', authRoutes);
+router.use('/users', userRoutes);
 router.use('/clientes', clienteRoutes);
 router.use('/productos', productoRoutes);
 router.use('/oc', ocRoutes);

@@ -10,6 +10,7 @@ import {
   Box,
   LogOut,
   LayoutDashboard,
+  UserCog,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -35,6 +36,7 @@ export default function DashboardLayout() {
     { icon: Truck, label: 'Envíos', path: '/envios' },
     { icon: Box, label: 'Productos', path: '/productos' },
     { icon: Users, label: 'Clientes', path: '/clientes' },
+    { icon: UserCog, label: 'Usuarios', path: '/usuarios' },
   ];
 
   const clienteMenuItems = [

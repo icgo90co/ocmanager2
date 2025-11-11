@@ -113,3 +113,14 @@ export const enviosApi = {
 export const auditApi = {
   getAll: (params?: any) => api.get('/audit', { params }),
 };
+
+// Usuarios API
+export const usersApi = {
+  getAll: () => api.get('/users'),
+  getById: (id: number) => api.get(`/users/${id}`),
+  create: (data: any) => api.post('/users', data),
+  update: (id: number, data: any) => api.patch(`/users/${id}`, data),
+  changePassword: (id: number, newPassword: string) =>
+    api.post(`/users/${id}/change-password`, { newPassword }),
+  delete: (id: number) => api.delete(`/users/${id}`),
+};

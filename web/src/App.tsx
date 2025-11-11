@@ -8,6 +8,7 @@ import OrdenesVentaPage from './pages/OrdenesVentaPage';
 import EnviosPage from './pages/EnviosPage';
 import ProductosPage from './pages/ProductosPage';
 import ClientesPage from './pages/ClientesPage';
+import UsersPage from './pages/UsersPage';
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
@@ -37,6 +38,7 @@ function App() {
         <Route path="envios" element={<EnviosPage />} />
         <Route path="productos" element={<ProductosPage />} />
         <Route path="clientes" element={<ClientesPage />} />
+        <Route path="usuarios" element={<UsersPage />} />
       </Route>
     </Routes>
   );
