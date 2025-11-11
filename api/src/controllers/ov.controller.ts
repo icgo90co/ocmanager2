@@ -178,24 +178,90 @@ export const createFromOC = async (req: AuthRequest, res: Response, next: NextFu
 export const update = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
-    const { notas } = req.body;
+    const { clienteId, notas, items } = req.body;
 
     const orden = await prisma.ordenVenta.findUnique({
       where: { id: parseInt(id) },
+      include: { items: true },
     });
 
     if (!orden) {
       throw new ApiError(404, 'Orden no encontrada');
     }
 
-    if (['procesada'].includes(orden.estado)) {
+    if (['procesada', 'anulada'].includes(orden.estado)) {
       throw new ApiError(400, 'No se puede editar una orden en estado ' + orden.estado);
+    }
+
+    // Preparar datos de actualización
+    const updateData: any = {};
+    if (notas !== undefined) updateData.notas = notas;
+    if (clienteId !== undefined) updateData.clienteId = clienteId;
+
+    // Si se proporcionan items, actualizar la orden completa
+    if (items && Array.isArray(items)) {
+      // Validar items
+      for (const item of items) {
+        if (!item.sku || !item.descripcion || item.precioUnitario === undefined || item.cantidad === undefined) {
+          throw new ApiError(400, 'Todos los ítems deben tener SKU, descripción, precio unitario y cantidad');
+        }
+      }
+
+      // Calcular nuevo total
+      const nuevoTotal = items.reduce((sum: number, item: any) => {
+        const subtotal = Number(item.cantidad) * Number(item.precioUnitario);
+        return sum + subtotal;
+      }, 0);
+
+      updateData.total = nuevoTotal;
+
+      // Eliminar items antiguos y crear nuevos en una transacción
+      const itemsData = items.map((item: any) => ({
+        sku: item.sku,
+        descripcion: item.descripcion,
+        cantidad: item.cantidad,
+        precioUnitario: item.precioUnitario,
+        subtotal: Number(item.cantidad) * Number(item.precioUnitario),
+        productoId: item.productoId || null,
+      }));
+
+      await prisma.oVItem.deleteMany({
+        where: { ovId: parseInt(id) },
+      });
+
+      updateData.items = { create: itemsData };
     }
 
     const updated = await prisma.ordenVenta.update({
       where: { id: parseInt(id) },
-      data: { notas },
-      include: { items: true, cliente: true },
+      data: updateData,
+      include: { items: true, cliente: true, ordenCompra: true },
+    });
+
+    // Registrar en audit log
+    await prisma.auditLog.create({
+      data: {
+        userId: req.user!.id,
+        entidad: 'OrdenVenta',
+        entidadId: orden.id,
+        accion: 'UPDATE',
+        diffJson: JSON.stringify({
+          before: {
+            clienteId: orden.clienteId,
+            notas: orden.notas,
+            total: orden.total,
+            itemsCount: orden.items.length,
+          },
+          after: {
+            clienteId: updateData.clienteId || orden.clienteId,
+            notas: updateData.notas !== undefined ? updateData.notas : orden.notas,
+            total: updateData.total || orden.total,
+            itemsCount: items?.length || orden.items.length,
+          },
+        }),
+        ip: req.ip,
+        userAgent: req.headers['user-agent'],
+      },
     });
 
     res.json({ success: true, data: updated });

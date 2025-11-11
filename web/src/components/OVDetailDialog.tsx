@@ -8,7 +8,8 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { formatCurrency, formatDate } from '@/lib/utils';
-import { FileText, Truck, FileDown, Edit2, Save, X } from 'lucide-react';
+import { FileText, Truck, FileDown, Edit2, Save, X, Pencil } from 'lucide-react';
+import { EditOVDialog } from './EditOVDialog';
 
 interface OVDetailDialogProps {
   open: boolean;
@@ -26,6 +27,7 @@ export function OVDetailDialog({ open, onOpenChange, ovId }: OVDetailDialogProps
   const [fechaEntregaEstimada, setFechaEntregaEstimada] = useState('');
   const [editandoNotas, setEditandoNotas] = useState(false);
   const [notasEditadas, setNotasEditadas] = useState('');
+  const [showEditDialog, setShowEditDialog] = useState(false);
 
   const { data: ov, isLoading } = useQuery({
     queryKey: ['ov-detail', ovId],
@@ -133,15 +135,28 @@ export function OVDetailDialog({ open, onOpenChange, ovId }: OVDetailDialogProps
               <FileText className="h-5 w-5" />
               Detalle de Orden de Venta
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleDownloadPDF}
-              className="flex items-center gap-2"
-            >
-              <FileDown className="h-4 w-4" />
-              Descargar PDF
-            </Button>
+            <div className="flex items-center gap-2">
+              {user?.role === 'admin' && !['procesada', 'anulada'].includes(ov?.estado) && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowEditDialog(true)}
+                  className="flex items-center gap-2"
+                >
+                  <Pencil className="h-4 w-4" />
+                  Editar Orden
+                </Button>
+              )}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleDownloadPDF}
+                className="flex items-center gap-2"
+              >
+                <FileDown className="h-4 w-4" />
+                Descargar PDF
+              </Button>
+            </div>
           </DialogTitle>
         </DialogHeader>
 
@@ -406,6 +421,16 @@ export function OVDetailDialog({ open, onOpenChange, ovId }: OVDetailDialogProps
           <div className="text-center py-8 text-gray-500">No se pudo cargar la orden</div>
         )}
       </DialogContent>
+
+      {/* Dialog de Edición */}
+      {ov && (
+        <EditOVDialog
+          open={showEditDialog}
+          onOpenChange={setShowEditDialog}
+          ovId={ovId}
+          ov={ov}
+        />
+      )}
     </Dialog>
   );
 }
