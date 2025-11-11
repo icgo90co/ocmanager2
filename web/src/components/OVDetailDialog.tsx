@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { formatCurrency, formatDate } from '@/lib/utils';
-import { FileText, Truck, FileDown } from 'lucide-react';
+import { FileText, Truck, FileDown, Edit2, Save, X } from 'lucide-react';
 
 interface OVDetailDialogProps {
   open: boolean;
@@ -24,6 +24,8 @@ export function OVDetailDialog({ open, onOpenChange, ovId }: OVDetailDialogProps
   const [carrier, setCarrier] = useState('');
   const [fechaSalida, setFechaSalida] = useState('');
   const [fechaEntregaEstimada, setFechaEntregaEstimada] = useState('');
+  const [editandoNotas, setEditandoNotas] = useState(false);
+  const [notasEditadas, setNotasEditadas] = useState('');
 
   const { data: ov, isLoading } = useQuery({
     queryKey: ['ov-detail', ovId],
@@ -64,6 +66,21 @@ export function OVDetailDialog({ open, onOpenChange, ovId }: OVDetailDialogProps
     },
   });
 
+  const actualizarNotasMutation = useMutation({
+    mutationFn: async (notas: string) => {
+      return await ovApi.update(ovId, { notas });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['ordenes-venta'] });
+      queryClient.invalidateQueries({ queryKey: ['ov-detail', ovId] });
+      setEditandoNotas(false);
+      alert('Notas actualizadas exitosamente');
+    },
+    onError: (error: any) => {
+      alert(error.response?.data?.message || 'Error al actualizar las notas');
+    },
+  });
+
   const handleCambiarEstado = () => {
     if (newEstado && newEstado !== ov?.estado) {
       cambiarEstadoMutation.mutate(newEstado);
@@ -89,6 +106,20 @@ export function OVDetailDialog({ open, onOpenChange, ovId }: OVDetailDialogProps
     } catch (error: any) {
       alert(error.response?.data?.message || 'Error al descargar el PDF');
     }
+  };
+
+  const handleEditarNotas = () => {
+    setNotasEditadas(ov?.notas || '');
+    setEditandoNotas(true);
+  };
+
+  const handleGuardarNotas = () => {
+    actualizarNotasMutation.mutate(notasEditadas);
+  };
+
+  const handleCancelarEdicion = () => {
+    setEditandoNotas(false);
+    setNotasEditadas('');
   };
 
   if (!open) return null;
@@ -153,12 +184,57 @@ export function OVDetailDialog({ open, onOpenChange, ovId }: OVDetailDialogProps
             </div>
 
             {/* Notas */}
-            {ov.notas && (
-              <div>
+            <div>
+              <div className="flex items-center justify-between mb-2">
                 <label className="text-sm font-medium text-gray-600">Notas</label>
-                <p className="mt-1 text-sm text-gray-700 p-3 bg-gray-50 rounded">{ov.notas}</p>
+                {user?.role === 'admin' && !editandoNotas && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleEditarNotas}
+                    className="h-8"
+                  >
+                    <Edit2 className="h-3 w-3 mr-1" />
+                    Editar
+                  </Button>
+                )}
               </div>
-            )}
+              
+              {editandoNotas ? (
+                <div className="space-y-2">
+                  <textarea
+                    className="w-full border rounded-md px-3 py-2 text-sm"
+                    value={notasEditadas}
+                    onChange={(e) => setNotasEditadas(e.target.value)}
+                    rows={4}
+                    placeholder="Escribe las notas aquí..."
+                  />
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      onClick={handleGuardarNotas}
+                      disabled={actualizarNotasMutation.isPending}
+                    >
+                      <Save className="h-3 w-3 mr-1" />
+                      {actualizarNotasMutation.isPending ? 'Guardando...' : 'Guardar'}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={handleCancelarEdicion}
+                      disabled={actualizarNotasMutation.isPending}
+                    >
+                      <X className="h-3 w-3 mr-1" />
+                      Cancelar
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <p className="mt-1 text-sm text-gray-700 p-3 bg-gray-50 rounded min-h-[60px]">
+                  {ov.notas || 'Sin notas'}
+                </p>
+              )}
+            </div>
 
             {/* Items */}
             <div>

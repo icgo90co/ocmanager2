@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { formatCurrency, formatDate } from '@/lib/utils';
-import { Plus, Eye, FileDown } from 'lucide-react';
+import { Plus, Eye, FileDown, FileText } from 'lucide-react';
 import { OrdenVentaForm } from '@/components/OrdenVentaForm';
 import { OVDetailDialog } from '@/components/OVDetailDialog';
 
@@ -92,7 +92,16 @@ export default function OrdenesVentaPage() {
                     <TableCell className="font-medium">{orden.codigoOv}</TableCell>
                     <TableCell>{orden.ordenCompra?.codigoOc || '-'}</TableCell>
                     <TableCell>{formatDate(orden.createdAt)}</TableCell>
-                    <TableCell>{orden.cliente?.nombreLegal}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        {orden.cliente?.nombreLegal}
+                        {orden.notas && (
+                          <span title={`Tiene notas: ${orden.notas.substring(0, 50)}${orden.notas.length > 50 ? '...' : ''}`}>
+                            <FileText className="h-4 w-4 text-blue-500" />
+                          </span>
+                        )}
+                      </div>
+                    </TableCell>
                     <TableCell>
                       <Badge variant="estado" estado={orden.estado} />
                     </TableCell>
